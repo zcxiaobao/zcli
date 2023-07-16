@@ -1,0 +1,23 @@
+{
+  "name": "@zc-clis/command",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "zcxiaobao <444186976@qq.com>",
+  "homepage": "",
+  "license": "ISC",
+  "main": "lib/command.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "node ./__tests__/command.test.js"
+  },
+  "publishConfig": {
+    "access": "public" 
+  },
+  "type": "module"
+}

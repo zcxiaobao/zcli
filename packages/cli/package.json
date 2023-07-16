@@ -1,0 +1,32 @@
+{
+  "name": "@zc-clis/cli",
+  "version": "0.0.0",
+  "description": "cli main",
+  "author": "zcxiaobao <444186976@qq.com>",
+  "homepage": "",
+  "license": "ISC",
+  "bin": {
+    "zcli": "bin/cli.js"
+  },
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib",
+    "bin"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node ./__tests__/cli.test.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@zc-clis/init": "^0.0.0",
+    "commander": "^11.0.0"
+  }
+}
