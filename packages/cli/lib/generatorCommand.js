@@ -6,7 +6,7 @@ import semver from "semver";
 import { program } from "commander";
 import { log } from "@zc-clis/utils";
 
-const LOWEST_NODE_VERSION = "18.0.0";
+const LOWEST_NODE_VERSION = "19.0.0";
 
 const __dirname = dirname(import.meta);
 const pkgPath = path.join(__dirname, "../package.json");
@@ -32,6 +32,5 @@ export default function generatorCommand() {
     .hook("preAction", () => {
       checkNodeVersion();
     });
-
   return program;
 }
