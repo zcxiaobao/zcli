@@ -1,5 +1,5 @@
 import Command from "@zc-clis/command";
-
+import { log } from "@zc-clis/utils";
 class InitCommand extends Command {
   get command() {
     return "init [name]";
@@ -13,8 +13,8 @@ class InitCommand extends Command {
     return [["-f, --force", "是否强制更新", false]];
   }
 
-  action() {
-    console.log("创建项目");
+  action([name, opts]) {
+    log.verbose("init", name, opts);
   }
 }
 

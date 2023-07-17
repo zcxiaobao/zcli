@@ -19,7 +19,7 @@ class Command {
     }
 
     cmd.action((...params) => {
-      this.action(...params);
+      this.action(params);
     });
   }
 
