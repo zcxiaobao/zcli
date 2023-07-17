@@ -1,5 +1,5 @@
 {
-  "name": "@zc-clis/init",
+  "name": "@zcxiaobao/init",
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "zcxiaobao <444186976@qq.com>",
@@ -21,7 +21,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@zc-clis/command": "^0.0.0",
-    "@zc-clis/utils": "^0.0.0"
+    "@zcxiaobao/command": "^0.0.0",
+    "@zcxiaobao/utils": "^0.0.0"
   }
 }

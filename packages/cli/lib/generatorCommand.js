@@ -4,7 +4,7 @@ import { dirname } from "dirname-filename-esm";
 import chalk from "chalk";
 import semver from "semver";
 import { program } from "commander";
-import { log } from "@zc-clis/utils";
+import { log } from "@zcxiaobao/utils";
 
 const LOWEST_NODE_VERSION = "18.0.0";
 

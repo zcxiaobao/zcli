@@ -1,5 +1,5 @@
-import Command from "@zc-clis/command";
-import { log } from "@zc-clis/utils";
+import Command from "@zcxiaobao/command";
+import { log } from "@zcxiaobao/utils";
 class InitCommand extends Command {
   get command() {
     return "init [name]";

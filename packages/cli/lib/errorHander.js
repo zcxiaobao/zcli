@@ -1,4 +1,4 @@
-import { printErrorLog } from "@zc-clis/utils";
+import { printErrorLog } from "@zcxiaobao/utils";
 
 process.on("uncaughtException", (e) => {
   printErrorLog(e, "error");

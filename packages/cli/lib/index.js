@@ -1,4 +1,4 @@
-import CreateInitCommand from "@zc-clis/init";
+import CreateInitCommand from "@zcxiaobao/init";
 import generatorCommand from "./generatorCommand.js";
 import "./errorHander.js";
 export default function () {
