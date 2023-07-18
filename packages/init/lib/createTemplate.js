@@ -1,4 +1,4 @@
-import { makeInput, log, makeList } from "@zcxiaobao/utils";
+import { makeInput, log, makeList, getLatestVersion } from "@zcxiaobao/utils";
 
 const ADD_TEMPLATE = [
   {
@@ -6,12 +6,14 @@ const ADD_TEMPLATE = [
     value: "template-vue3",
     npmName: "@zcxiaobao/template-vue3",
     version: "1.0.0",
+    forceInstallNew: true, // 是否默认下载最新版本
   },
   {
     name: "react18项目模板",
     value: "template-react18",
     npmName: "@zcxiaobao/template-react18",
     version: "1.0.0",
+    forceInstallNew: true,
   },
 ];
 
@@ -55,11 +57,15 @@ export default async function createTeplate(name, opts) {
     log.verbose("addName", addName);
     const addTemplate = await getTemplate();
     log.verbose("addTemplate", addTemplate);
+
     const needLoadTemplateDetails = ADD_TEMPLATE.find(
       (_) => _.value === addTemplate
     );
     log.verbose("needLoadTemplateDetails", needLoadTemplateDetails);
-
+    const addTemplateLatest = await getLatestVersion(
+      needLoadTemplateDetails.npmName
+    );
+    log.verbose("addTemplateLatest", addTemplateLatest);
     return {
       addName,
       addType,
