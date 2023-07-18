@@ -1,6 +1,7 @@
 import Command from "@zcxiaobao/command";
 import { log } from "@zcxiaobao/utils";
 import createTeplate from "./createTemplate.js";
+import downloadTemplate from "./downloadTemplate.js";
 class InitCommand extends Command {
   get command() {
     return "init [name]";
@@ -14,11 +15,12 @@ class InitCommand extends Command {
     return [["-f, --force", "是否强制更新", false]];
   }
 
-  action([name, opts]) {
+  async action([name, opts]) {
     // log.verbose("init", name, opts);
     // 1. 选择项目模板，生成项目信息
-    createTeplate(name, opts);
+    const { template } = await createTeplate(name, opts);
     // 2. 下载项目模板至缓存目录
+    await downloadTemplate(template);
     // 3. 安装项目模板至项目目录
   }
 }

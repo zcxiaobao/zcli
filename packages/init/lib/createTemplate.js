@@ -1,3 +1,6 @@
+import { homedir } from "node:os";
+import path from "node:path";
+
 import { makeInput, log, makeList, getLatestVersion } from "@zcxiaobao/utils";
 
 const ADD_TEMPLATE = [
@@ -27,6 +30,8 @@ const ADD_TYPE_LIST = [
   { name: "页面", value: ADD_TYPE.PAGE },
 ];
 
+const TEMP_HOME = ".zcli";
+
 function getAddType() {
   return makeList({
     choices: ADD_TYPE_LIST,
@@ -48,6 +53,12 @@ function getTemplate() {
     choices: ADD_TEMPLATE,
   });
 }
+
+// 安装缓存目录
+function makeTargetPath() {
+  return path.resolve(`${homedir()}/${TEMP_HOME}`, "addTemplate");
+}
+
 export default async function createTeplate(name, opts) {
   // 获取创建类型
   const addType = await getAddType();
@@ -66,10 +77,13 @@ export default async function createTeplate(name, opts) {
       needLoadTemplateDetails.npmName
     );
     log.verbose("addTemplateLatest", addTemplateLatest);
+
+    const targetPath = makeTargetPath();
     return {
       addName,
       addType,
       template: needLoadTemplateDetails,
+      targetPath, // 安装目录
     };
   }
 }
