@@ -12,6 +12,7 @@ function make({
   loop,
 }) {
   const options = {
+    type,
     name: "name",
     message,
     require,
@@ -25,6 +26,7 @@ function make({
   if (type === "list") {
     options.choices = choices;
   }
+  // 注意: 由于此处封装了 .name，后续获取都是 name 属性值
   return inquirer.prompt(options).then((answer) => answer.name);
 }
 
