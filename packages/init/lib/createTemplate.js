@@ -1,3 +1,5 @@
+import { makeInput, log } from "@zcxiaobao/utils";
+
 const ADD_TEMPLATE = [
   {
     name: "vue3项目模板",
@@ -21,6 +23,8 @@ const ADD_TYPE_LIST = [
   { name: "页面", value: ADD_TYPE.PAGE },
 ];
 
-export default function createTeplate(name, opts) {
+export default async function createTeplate(name, opts) {
   // 获取创建类型
+  const project = await makeInput({ message: "qing选择" });
+  log.info(project);
 }
