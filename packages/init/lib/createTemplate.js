@@ -80,7 +80,7 @@ export default async function createTeplate(name, opts) {
 
     const targetPath = makeTargetPath();
     return {
-      addName,
+      name: addName,
       addType,
       template: needLoadTemplateDetails,
       targetPath, // 安装目录
