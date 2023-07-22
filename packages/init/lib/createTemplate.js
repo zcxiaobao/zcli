@@ -18,6 +18,14 @@ const ADD_TEMPLATE = [
     version: "1.0.0",
     forceInstallNew: true,
   },
+  {
+    name: "vue-admin-template项目模板",
+    value: "template-vue-element-admin",
+    npmName: "@zcxiaobao/template-vue-element-admin",
+    version: "1.0.0",
+    forceInstallNew: true,
+    ignore: ["**/public/**", "**/assets/**"],
+  },
 ];
 
 const ADD_TYPE = {
@@ -84,6 +92,7 @@ export default async function createTeplate(name, opts) {
       addType,
       template: needLoadTemplateDetails,
       targetPath, // 安装目录
+      ignore: needLoadTemplateDetails.ignore,
     };
   }
 }
