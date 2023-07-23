@@ -14,6 +14,7 @@ class Github extends GitCommon {
       (config) => {
         config.headers["Authorization"] = `Bearer ${this.token}`;
         config.headers["Accept"] = "application/vnd.github+json";
+        config.headers["X-GitHub-Api-Version"] = "2022-11-28";
         return config;
       },
       (error) => {
@@ -36,10 +37,17 @@ class Github extends GitCommon {
       params,
       method: "get",
       headers,
+      // paramsSerializer(params) {
+      //   return params;
+      // },
     });
   }
   searchRepositories(params) {
     return this.get("/search/repositories", params);
+  }
+  searchCode(params) {
+    console.log(params);
+    return this.get("/search/code", params);
   }
 }
 

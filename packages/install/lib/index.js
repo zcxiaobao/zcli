@@ -4,7 +4,8 @@ import { log, Github, makeInput, makeList } from "@zcxiaobao/utils";
 
 const NEXT_PAGE = "${zcli_next_page}";
 const PREV_PAGE = "${zcli_prev_page}";
-
+const REPOSITORIES = "repositories";
+const CODE = "code";
 class InstallCommand extends Command {
   get command() {
     return "install";
@@ -30,14 +31,13 @@ class InstallCommand extends Command {
   }
   async searchGitAPI() {
     const SEARCH_TYPE = [
-      { name: "仓库", value: "repositories" },
-      { name: "源码", value: "code" },
+      { name: "仓库", value: REPOSITORIES },
+      { name: "源码", value: CODE },
     ];
     this.mode = await makeList({
       message: "请选择搜索模式",
       choices: SEARCH_TYPE,
     });
-
     this.q = await makeInput({
       message: "请输入搜索关键词",
       validate(value) {
@@ -69,25 +69,58 @@ class InstallCommand extends Command {
       list = [],
       count = 0;
     const params = {
+      // q: "addClass+in:file+language:js",
       q: this.q + (this.language ? `+language:${this.language}` : ""),
       per_page: this.per_page,
       page: this.page,
-      order: "desc",
     };
-    const spinner = ora("正在搜索中...").start();
-    try {
+    if (this.mode === REPOSITORIES) {
       searchRes = await this.gitAPI.searchRepositories(params);
-      spinner.stop();
-    } catch (error) {
-      spinner.stop();
+      list = searchRes.items.map((item) => ({
+        name: `${item.full_name}(${item.description})`,
+        value: item.full_name,
+      }));
+    } else {
+      searchRes = await this.gitAPI.searchCode(params);
+      console.log(searchRes);
+      list = searchRes.items.map((item) => ({
+        name:
+          item.repository.full_name +
+          (item.repository.description
+            ? `(${item.repository.description})`
+            : ""),
+        value: item.repository.full_name,
+      }));
     }
+    // const spinner = ora("正在搜索中...").start();
+    // if (this.mode === REPOSITORIES) {
+    //   try {
+    //     searchRes = await this.gitAPI.searchRepositories(params);
+    //     spinner.stop();
+    //   } catch (error) {
+    //     spinner.stop();
+    //   }
+    //   searchRes.items.forEach((i) => {
+    //     list.push({
+    //       name: `${i.full_name}(${i.description})`,
+    //       value: i.full_name,
+    //     });
+    //   });
+    // } else {
+    //   try {
+    //     searchRes = await this.gitAPI.searchCode(params);
+    //     spinner.stop();
+    //   } catch (error) {
+    //     spinner.stop();
+    //   }
+    //   searchRes.items.forEach((i) => {
+    //     list.push({
+    //       name: `${i.repository.full_name}(${i.repository.description})`,
+    //       value: i.repository.full_name,
+    //     });
+    //   });
+    // }
 
-    searchRes.items.forEach((i) => {
-      list.push({
-        name: `${i.full_name}(${i.description})`,
-        value: i.full_name,
-      });
-    });
     count = searchRes.total_count;
     if (this.per_page * this.page < count) {
       list.push({
@@ -101,16 +134,18 @@ class InstallCommand extends Command {
         value: PREV_PAGE,
       });
     }
-    const keyword = await makeList({
-      message: "请选择你要下载的项目",
-      choices: list,
-    });
-    if (keyword === NEXT_PAGE) {
-      await this.nextPage();
-    } else if (keyword === PREV_PAGE) {
-      await this.prevPage();
-    } else {
-      this.keyword = keyword;
+    if (count > 0) {
+      const keyword = await makeList({
+        message: `请选择你要下载的项目（共条${count}数据）`,
+        choices: list,
+      });
+      if (keyword === NEXT_PAGE) {
+        await this.nextPage();
+      } else if (keyword === PREV_PAGE) {
+        await this.prevPage();
+      } else {
+        this.keyword = keyword;
+      }
     }
   }
   async nextPage() {
