@@ -69,57 +69,38 @@ class InstallCommand extends Command {
       list = [],
       count = 0;
     const params = {
-      // q: "addClass+in:file+language:js",
       q: this.q + (this.language ? `+language:${this.language}` : ""),
       per_page: this.per_page,
       page: this.page,
     };
+    const spinner = ora("正在搜索中...").start();
     if (this.mode === REPOSITORIES) {
-      searchRes = await this.gitAPI.searchRepositories(params);
-      list = searchRes.items.map((item) => ({
-        name: `${item.full_name}(${item.description})`,
-        value: item.full_name,
-      }));
+      try {
+        searchRes = await this.gitAPI.searchRepositories(params);
+        spinner.stop();
+      } catch (error) {
+        spinner.stop();
+      }
+      searchRes.items.forEach((i) => {
+        list.push({
+          name: `${i.full_name}(${i.description})`,
+          value: i.full_name,
+        });
+      });
     } else {
-      searchRes = await this.gitAPI.searchCode(params);
-      console.log(searchRes);
-      list = searchRes.items.map((item) => ({
-        name:
-          item.repository.full_name +
-          (item.repository.description
-            ? `(${item.repository.description})`
-            : ""),
-        value: item.repository.full_name,
-      }));
+      try {
+        searchRes = await this.gitAPI.searchCode(params);
+        spinner.stop();
+      } catch (error) {
+        spinner.stop();
+      }
+      searchRes.items.forEach((i) => {
+        list.push({
+          name: `${i.repository.full_name}(${i.repository.description})`,
+          value: i.repository.full_name,
+        });
+      });
     }
-    // const spinner = ora("正在搜索中...").start();
-    // if (this.mode === REPOSITORIES) {
-    //   try {
-    //     searchRes = await this.gitAPI.searchRepositories(params);
-    //     spinner.stop();
-    //   } catch (error) {
-    //     spinner.stop();
-    //   }
-    //   searchRes.items.forEach((i) => {
-    //     list.push({
-    //       name: `${i.full_name}(${i.description})`,
-    //       value: i.full_name,
-    //     });
-    //   });
-    // } else {
-    //   try {
-    //     searchRes = await this.gitAPI.searchCode(params);
-    //     spinner.stop();
-    //   } catch (error) {
-    //     spinner.stop();
-    //   }
-    //   searchRes.items.forEach((i) => {
-    //     list.push({
-    //       name: `${i.repository.full_name}(${i.repository.description})`,
-    //       value: i.repository.full_name,
-    //     });
-    //   });
-    // }
 
     count = searchRes.total_count;
     if (this.per_page * this.page < count) {
