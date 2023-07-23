@@ -9,7 +9,7 @@ function make({
   choices,
   validate,
   pageSize,
-  loop,
+  loop = false,
 }) {
   const options = {
     type,

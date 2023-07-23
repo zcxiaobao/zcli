@@ -1,5 +1,9 @@
+import ora from "ora";
 import Command from "@zcxiaobao/command";
-import { log, Github } from "@zcxiaobao/utils";
+import { log, Github, makeInput, makeList } from "@zcxiaobao/utils";
+
+const NEXT_PAGE = "${zcli_next_page}";
+const PREV_PAGE = "${zcli_prev_page}";
 
 class InstallCommand extends Command {
   get command() {
@@ -16,8 +20,106 @@ class InstallCommand extends Command {
 
   async action() {
     log.info("install指令启动");
-    const github = new Github();
-    github.init();
+    // 获取 git api
+    this.gitAPI = await this.getGitAPI();
+    // 搜索功能：获取仓库还是源码
+    await this.searchGitAPI();
+    // 输入关键词
+    // 输入语言
+    // 输出结果
+  }
+  async searchGitAPI() {
+    const SEARCH_TYPE = [
+      { name: "仓库", value: "repositories" },
+      { name: "源码", value: "code" },
+    ];
+    this.mode = await makeList({
+      message: "请选择搜索模式",
+      choices: SEARCH_TYPE,
+    });
+
+    this.q = await makeInput({
+      message: "请输入搜索关键词",
+      validate(value) {
+        if (value.length > 0) {
+          return true;
+        } else {
+          return "请输入搜索关键词";
+        }
+      },
+    });
+
+    this.language = await makeInput({
+      message: "请输入开发语言",
+    });
+
+    this.per_page = 10;
+    this.page = 1;
+
+    await this.doSearch();
+  }
+  async getGitAPI() {
+    const gitAPI = new Github();
+    await gitAPI.init();
+    return gitAPI;
+  }
+
+  async doSearch() {
+    let searchRes,
+      list = [],
+      count = 0;
+    const params = {
+      q: this.q + (this.language ? `+language:${this.language}` : ""),
+      per_page: this.per_page,
+      page: this.page,
+      order: "desc",
+    };
+    const spinner = ora("正在搜索中...").start();
+    try {
+      searchRes = await this.gitAPI.searchRepositories(params);
+      spinner.stop();
+    } catch (error) {
+      spinner.stop();
+    }
+
+    searchRes.items.forEach((i) => {
+      list.push({
+        name: `${i.full_name}(${i.description})`,
+        value: i.full_name,
+      });
+    });
+    count = searchRes.total_count;
+    if (this.per_page * this.page < count) {
+      list.push({
+        name: "下一页",
+        value: NEXT_PAGE,
+      });
+    }
+    if (this.page > 1) {
+      list.unshift({
+        name: "上一页",
+        value: PREV_PAGE,
+      });
+    }
+    const keyword = await makeList({
+      message: "请选择你要下载的项目",
+      choices: list,
+    });
+    if (keyword === NEXT_PAGE) {
+      await this.nextPage();
+    } else if (keyword === PREV_PAGE) {
+      await this.prevPage();
+    } else {
+      this.keyword = keyword;
+    }
+  }
+  async nextPage() {
+    this.page++;
+    return this.doSearch();
+  }
+  async prevPage() {
+    this.page--;
+    return this.doSearch();
   }
 }
 

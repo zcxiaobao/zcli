@@ -29,6 +29,7 @@
   "type": "module",
   "dependencies": {
     "@zcxiaobao/command": "^0.0.0",
-    "@zcxiaobao/utils": "^0.0.0"
+    "@zcxiaobao/utils": "^0.0.0",
+    "ora": "^6.3.1"
   }
 }

@@ -38,6 +38,9 @@ class Github extends GitCommon {
       headers,
     });
   }
+  searchRepositories(params) {
+    return this.get("/search/repositories", params);
+  }
 }
 
 export default Github;
