@@ -3,8 +3,8 @@ import { homedir } from "node:os";
 import { pathExistsSync } from "path-exists";
 import fsExtra from "fs-extra";
 import fs from "node:fs";
-import makePassword from "../inquirer.js";
-import { log } from "../log.js";
+import { makePassword } from "../inquirer.js";
+import log from "../log.js";
 
 const TEMP_HOME = ".zcli";
 const TEMP_TOKEN = ".token";

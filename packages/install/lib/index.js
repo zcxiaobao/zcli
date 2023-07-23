@@ -1,5 +1,5 @@
 import Command from "@zcxiaobao/command";
-import { log } from "@zcxiaobao/utils";
+import { log, Github } from "@zcxiaobao/utils";
 
 class InstallCommand extends Command {
   get command() {
@@ -16,6 +16,8 @@ class InstallCommand extends Command {
 
   async action() {
     log.info("install指令启动");
+    const github = new Github();
+    github.init();
   }
 }
 
