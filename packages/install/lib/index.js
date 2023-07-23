@@ -25,6 +25,8 @@ class InstallCommand extends Command {
     this.gitAPI = await this.getGitAPI();
     // 搜索功能：获取仓库还是源码
     await this.searchGitAPI();
+    // 搜索对应仓库的 tag
+    await this.selectTags();
     // 输入关键词
     // 输入语言
     // 输出结果
@@ -57,6 +59,10 @@ class InstallCommand extends Command {
     this.page = 1;
 
     await this.doSearch();
+  }
+  async selectTags() {
+    this.tagPage = 1;
+    await this.doSelectTag();
   }
   async getGitAPI() {
     const gitAPI = new Github();
@@ -128,6 +134,28 @@ class InstallCommand extends Command {
         this.keyword = keyword;
       }
     }
+  }
+  async doSelectTag() {
+    let tagList;
+    const params = {
+      page: this.tagPage,
+    };
+    const spinner = ora("正在加载tag...").start();
+    try {
+      tagList = await this.gitAPI.getTags(this.keyword, params);
+      spinner.stop();
+    } catch (e) {
+      log.error(e);
+      spinner.stop();
+    }
+    this.tag = await makeList({
+      message: "请选择要下载的tag",
+      choices: tagList.map((tag) => ({
+        name: tag.name,
+        value: tag.name,
+      })),
+    });
+    console.log(this.tag);
   }
   async nextPage() {
     this.page++;

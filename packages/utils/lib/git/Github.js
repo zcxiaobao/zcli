@@ -46,8 +46,10 @@ class Github extends GitCommon {
     return this.get("/search/repositories", params);
   }
   searchCode(params) {
-    console.log(params);
     return this.get("/search/code", params);
+  }
+  getTags(fullName, params) {
+    return this.get(`/repos/${fullName}/tags`, params);
   }
 }
 
