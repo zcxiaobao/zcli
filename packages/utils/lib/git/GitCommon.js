@@ -1,5 +1,6 @@
 import path from "node:path";
 import { homedir } from "node:os";
+import { execa } from "execa";
 import { pathExistsSync } from "path-exists";
 import fsExtra from "fs-extra";
 import fs from "node:fs";
@@ -29,5 +30,35 @@ class GitCommon {
     }
     log.verbose("token", this.token);
   }
+
+  cloneRepo(fullName, tag) {
+    console.log(tag);
+    if (tag) {
+      return execa("git", ["clone", this.getRepoUrl(fullName), "-b", tag], {
+        stdout: "inherit",
+      });
+    } else {
+      return execa("git", ["clone", this.getRepoUrl(fullName)], {
+        stdout: "inherit",
+      });
+    }
+  }
+
+  installDependencies(cwd, fullName) {
+    const projectPath = getProjectPath(cwd, fullName);
+    console.log(projectPath);
+    if (pathExistsSync(projectPath)) {
+      return execa("pnpm", ["install"], {
+        cwd: projectPath,
+        stdout: "inherit",
+      });
+    }
+    return null;
+  }
+}
+
+function getProjectPath(cwd, fullName) {
+  const projectName = fullName.split("/")[1];
+  return path.resolve(cwd, projectName);
 }
 export { GitCommon };

@@ -1,6 +1,15 @@
 import ora from "ora";
 import Command from "@zcxiaobao/command";
-import { log, Github, makeInput, makeList } from "@zcxiaobao/utils";
+import { execa } from "execa";
+import { pathExistsSync } from "path-exists";
+
+import {
+  log,
+  Github,
+  makeInput,
+  makeList,
+  printErrorLog,
+} from "@zcxiaobao/utils";
 
 const NEXT_PAGE = "${zcli_next_page}";
 const PREV_PAGE = "${zcli_prev_page}";
@@ -27,9 +36,10 @@ class InstallCommand extends Command {
     await this.searchGitAPI();
     // 搜索对应仓库的 tag
     await this.selectTags();
-    // 输入关键词
-    // 输入语言
-    // 输出结果
+    // 下载对应库
+    // await this.downloadRepo();
+    // 安装依赖
+    await this.installDependencies();
   }
   async searchGitAPI() {
     const SEARCH_TYPE = [
@@ -148,14 +158,38 @@ class InstallCommand extends Command {
       log.error(e);
       spinner.stop();
     }
-    this.tag = await makeList({
-      message: "请选择要下载的tag",
-      choices: tagList.map((tag) => ({
-        name: tag.name,
-        value: tag.name,
-      })),
-    });
-    console.log(this.tag);
+    let tagListChoices = tagList.map((tag) => ({
+      name: tag.name,
+      value: tag.name,
+    }));
+    if (tagList.length > 0) {
+      tagListChoices.push({
+        name: "下一页",
+        value: NEXT_PAGE,
+      });
+    }
+    if (this.tagPage > 1) {
+      tagListChoices.unshift({
+        name: "上一页",
+        value: PREV_PAGE,
+      });
+    }
+    if (tagListChoices.length > 0) {
+      const tag = await makeList({
+        message: "请选择要下载的tag",
+        choices: tagListChoices,
+      });
+      if (tag === NEXT_PAGE) {
+        await this.nextTag();
+      } else if (tag === PREV_PAGE) {
+        await this.prevTag();
+      } else {
+        this.tag = tag;
+        log.verbose("tag", this.tag);
+      }
+    } else {
+      log.info("该项目并没有tag");
+    }
   }
   async nextPage() {
     this.page++;
@@ -164,6 +198,43 @@ class InstallCommand extends Command {
   async prevPage() {
     this.page--;
     return this.doSearch();
+  }
+
+  async nextTag() {
+    this.tagPage++;
+    return this.doSelectTag();
+  }
+  async prevTag() {
+    this.tagPage--;
+    return this.doSelectTag();
+  }
+
+  async downloadRepo() {
+    const spinner = ora(`正在下载：${this.keyword}(${this.tag})`).start();
+    try {
+      await this.gitAPI.cloneRepo(this.keyword, this.tag);
+      spinner.stop();
+    } catch (e) {
+      spinner.stop();
+      printErrorLog(e);
+    }
+  }
+
+  async installDependencies() {
+    // const spinner = ora("正在安装依赖...").start();
+    const cwd = process.cwd();
+    try {
+      const ret = await this.gitAPI.installDependencies(cwd, this.keyword);
+      if (!ret) {
+        log.error(`依赖安装失败: ${this.keyword}(${this.selectedTag})`);
+      } else {
+        log.success(`依赖安装成功: ${this.keyword}(${this.selectedTag})`);
+      }
+      // spinner.stop();
+    } catch (e) {
+      printErrorLog(e);
+      // spinner.stop();
+    }
   }
 }
 

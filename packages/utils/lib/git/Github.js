@@ -42,6 +42,10 @@ class Github extends GitCommon {
       // },
     });
   }
+  getRepoUrl(fullName) {
+    // return `https://github.com/${fullName}.git`;
+    return `git@github.com:${fullName}.git`;
+  }
   searchRepositories(params) {
     return this.get("/search/repositories", params);
   }
