@@ -43,12 +43,36 @@ class GitCommon {
       });
     }
   }
-
+  runRepo(cwd, fullName) {
+    const projectPath = getProjectPath(cwd, fullName);
+    const pkg = getPackageJson(cwd, fullName);
+    if (pkg) {
+      const { scripts } = pkg;
+      console.log(scripts);
+      if (scripts && scripts.dev) {
+        return execa("npm", ["run", "dev"], {
+          cwd: projectPath,
+          stdout: "inherit",
+        });
+      } else if (scripts && scripts.start) {
+        return execa("npm", ["run", "start"], {
+          cwd: projectPath,
+          stdout: "inherit",
+        });
+      } else if (scripts && scripts.serve) {
+        return execa("npm", ["run", "serve"], {
+          cwd: projectPath,
+          stdout: "inherit",
+        });
+      } else {
+        log.warn("没有找到启动命令");
+      }
+    }
+  }
   installDependencies(cwd, fullName) {
     const projectPath = getProjectPath(cwd, fullName);
-    console.log(projectPath);
     if (pathExistsSync(projectPath)) {
-      return execa("pnpm", ["install"], {
+      return execa("npm", ["install"], {
         cwd: projectPath,
         stdout: "inherit",
       });
@@ -56,7 +80,14 @@ class GitCommon {
     return null;
   }
 }
-
+function getPackageJson(cwd, fullName) {
+  const projectPath = getProjectPath(cwd, fullName);
+  const pkgPath = path.resolve(projectPath, "package.json");
+  if (pathExistsSync(pkgPath)) {
+    return fsExtra.readJsonSync(pkgPath);
+  }
+  return null;
+}
 function getProjectPath(cwd, fullName) {
   const projectName = fullName.split("/")[1];
   return path.resolve(cwd, projectName);

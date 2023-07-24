@@ -1,7 +1,5 @@
 import ora from "ora";
 import Command from "@zcxiaobao/command";
-import { execa } from "execa";
-import { pathExistsSync } from "path-exists";
 
 import {
   log,
@@ -37,9 +35,11 @@ class InstallCommand extends Command {
     // 搜索对应仓库的 tag
     await this.selectTags();
     // 下载对应库
-    // await this.downloadRepo();
+    await this.downloadRepo();
     // 安装依赖
     await this.installDependencies();
+    // 自动启动项目
+    await this.runRepo();
   }
   async searchGitAPI() {
     const SEARCH_TYPE = [
@@ -235,6 +235,10 @@ class InstallCommand extends Command {
       printErrorLog(e);
       // spinner.stop();
     }
+  }
+
+  async runRepo() {
+    await this.gitAPI.runRepo(process.cwd(), this.keyword);
   }
 }
 
