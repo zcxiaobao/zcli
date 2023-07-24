@@ -43,11 +43,19 @@ class GitCommon {
       });
     }
   }
-  runRepo(cwd, fullName) {
+  async runRepo(cwd, fullName) {
     const projectPath = getProjectPath(cwd, fullName);
     const pkg = getPackageJson(cwd, fullName);
     if (pkg) {
-      const { scripts } = pkg;
+      const { scripts, bin, name } = pkg;
+      // 自动安装 bin 到全局
+      if (bin) {
+        await execa(
+          "npm",
+          ["install", "-g", name, "--registry=https://registry.npmmirror.com"],
+          { cwd: projectPath, stdout: "inherit" }
+        );
+      }
       console.log(scripts);
       if (scripts && scripts.dev) {
         return execa("npm", ["run", "dev"], {
