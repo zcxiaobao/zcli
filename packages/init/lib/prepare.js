@@ -36,9 +36,11 @@ export default async function perpare(options) {
     }
   }
   // 4. 交互式获取待下载模板信息
-  let template = await createTeplate();
+  let { template, name, version } = await createTeplate();
   return {
     targetPath,
     template,
+    name,
+    version,
   };
 }

@@ -19,7 +19,8 @@ async function downloadAddTemplate({ npmName, version }, targetPath) {
   await execa(installCommand, installArgs, { cwd });
 }
 export default async function downloadTemplate({ template, targetPath }) {
-  const { version, npmName } = template.template;
+  const { version, npmName } = template;
+  console.log(template);
   // 1.检查模板是否存在
   const targetTemPath = getTargetTemplatePath(npmName);
   const targetTemPathExits = pathExistsSync(targetTemPath);
@@ -28,7 +29,7 @@ export default async function downloadTemplate({ template, targetPath }) {
   if (!targetTemPathExits) {
     const spinner = ora("正在下载模板...").start();
     try {
-      await downloadAddTemplate(template.template, targetPath);
+      await downloadAddTemplate(template, targetPath);
       spinner.stop();
       log.success("下载模板成功");
     } catch (e) {
@@ -44,7 +45,7 @@ export default async function downloadTemplate({ template, targetPath }) {
     if (isUpdateTemplate) {
       const spinner = ora("正在更新模板...").start();
       try {
-        await downloadAddTemplate(template.template, targetPath);
+        await downloadAddTemplate(template, targetPath);
         spinner.stop();
         log.success("更新模板成功");
       } catch (e) {
