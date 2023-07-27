@@ -23,15 +23,15 @@ class InitCommand extends Command {
     if (!options.installPath) {
       options.installPath = installPath;
     }
-    let result = await prepare(options);
-    if (!result) {
+    let selectedTemplate = await prepare(options);
+    if (!selectedTemplate) {
       log.info("创建项目终止");
       return;
     }
     // 1. 选择项目模板，生成项目信息
     // const selectedTemplate = await createTeplate(name, opts);
     // // 2. 下载项目模板至缓存目录
-    await downloadTemplate(result);
+    await downloadTemplate(selectedTemplate);
     // // 3. 安装项目模板至项目目录
     // await installTemplate(selectedTemplate, opts);
   }
