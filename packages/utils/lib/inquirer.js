@@ -40,3 +40,6 @@ export function makeInput(params) {
 export function makePassword(params) {
   return make({ type: "password", ...params });
 }
+export function makeConfirm(params) {
+  return make({ type: "confirm", default: false, ...params });
+}
