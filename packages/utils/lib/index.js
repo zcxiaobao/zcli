@@ -5,7 +5,13 @@ import { getLatestVersion } from "./npm.js";
 import Github from "./git/Github.js";
 import { TEMP_HOME } from "./constType.js";
 
-import { makeTargetPath, ensureNeedDir } from "./Package.js";
+import {
+  makeTargetPath,
+  ensureNeedDir,
+  getTargetTemplatePath,
+  pathExists,
+  getTargetTemplatePathExits,
+} from "./Package.js";
 export {
   log,
   printErrorLog,
@@ -16,6 +22,12 @@ export {
   Github,
 };
 
-export { makeTargetPath, ensureNeedDir };
+export {
+  makeTargetPath,
+  ensureNeedDir,
+  getTargetTemplatePath,
+  getTargetTemplatePathExits,
+  pathExists,
+};
 
 export { TEMP_HOME };
