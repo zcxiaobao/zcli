@@ -4,6 +4,8 @@ import { makeInput, makeList, makeConfirm } from "./inquirer.js";
 import { getLatestVersion } from "./npm.js";
 import Github from "./git/Github.js";
 import { TEMP_HOME } from "./constType.js";
+
+import { makeTargetPath, ensureNeedDir } from "./Package.js";
 export {
   log,
   printErrorLog,
@@ -13,5 +15,7 @@ export {
   getLatestVersion,
   Github,
 };
+
+export { makeTargetPath, ensureNeedDir };
 
 export { TEMP_HOME };

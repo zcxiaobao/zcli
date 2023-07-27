@@ -1,10 +1,12 @@
-import { homedir } from "node:os";
-import path from "node:path";
 import fsExtra from "fs-extra";
-import { log, makeConfirm, printErrorLog } from "@zcxiaobao/utils";
+import {
+  log,
+  makeConfirm,
+  makeTargetPath,
+  ensureNeedDir,
+} from "@zcxiaobao/utils";
 import createTeplate from "./createTemplate.js";
 
-const TEMP_HOME = ".zcli";
 export default async function perpare(options) {
   // 1. 确保 targetPath 与 installPath 存在
   const targetPath = makeTargetPath();
@@ -39,20 +41,4 @@ export default async function perpare(options) {
     targetPath,
     template,
   };
-}
-
-// 安装缓存目录
-function makeTargetPath() {
-  return path.resolve(`${homedir()}/${TEMP_HOME}`, "template");
-}
-
-// 确保缓存目录和安装目录存在
-async function ensureNeedDir(targetPath, installPath) {
-  const temTargetPath = path.resolve(targetPath, "node_modules");
-  try {
-    await fsExtra.ensureDir(temTargetPath);
-    await fsExtra.ensureDir(installPath);
-  } catch (e) {
-    printErrorLog(e);
-  }
 }
