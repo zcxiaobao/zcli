@@ -1,0 +1,33 @@
+{
+  "name": "@zcxiaobao/commit",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "zcxiaobao <444186976@qq.com>",
+  "homepage": "https://github.com/zcxiaobao/zcli#readme",
+  "license": "ISC",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcxiaobao/zcli.git"
+  },
+  "scripts": {
+    "test": "node ./__tests__/commit.test.js"
+  },
+  "bugs": {
+    "url": "https://github.com/zcxiaobao/zcli/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "dependencies": {
+    "@zcxiaobao/utils": "^0.0.0"
+  }
+}
