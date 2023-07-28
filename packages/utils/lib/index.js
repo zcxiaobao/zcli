@@ -3,14 +3,17 @@ import printErrorLog from "./printErrorLog.js";
 import { makeInput, makeList, makeConfirm } from "./inquirer.js";
 import { getLatestVersion } from "./npm.js";
 import Github from "./git/Github.js";
-import { TEMP_HOME } from "./constType.js";
+import Git from "./git/Git.js";
+import { DEFAULT_CLI_HOME, GIT_OWNER_TYPE, REPO_OWNER } from "./constType.js";
 
 import {
-  makeTargetPath,
+  getDefalutCliTemPath,
   ensureNeedDir,
   getTargetTemplatePath,
   pathExists,
   getTargetTemplatePathExits,
+  getGitServerPath,
+  getGitTokenPath,
 } from "./Package.js";
 export {
   log,
@@ -23,11 +26,15 @@ export {
 };
 
 export {
-  makeTargetPath,
+  getDefalutCliTemPath,
   ensureNeedDir,
   getTargetTemplatePath,
   getTargetTemplatePathExits,
+  getGitServerPath,
   pathExists,
+  getGitTokenPath,
 };
 
-export { TEMP_HOME };
+export { DEFAULT_CLI_HOME, GIT_OWNER_TYPE, REPO_OWNER };
+
+export { Git };

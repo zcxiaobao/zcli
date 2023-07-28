@@ -2,14 +2,14 @@ import fsExtra from "fs-extra";
 import {
   log,
   makeConfirm,
-  makeTargetPath,
+  getDefalutCliTemPath,
   ensureNeedDir,
 } from "@zcxiaobao/utils";
 import createTeplate from "./createTemplate.js";
 
 export default async function perpare(options) {
   // 1. 确保 targetPath 与 installPath 存在
-  const targetPath = makeTargetPath();
+  const targetPath = getDefalutCliTemPath();
   await ensureNeedDir(targetPath, options.installPath);
   // 2. 检测下载路径是否为空
   let fileList = fsExtra.readdirSync(options.installPath);

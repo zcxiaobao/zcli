@@ -30,7 +30,6 @@ class Github extends GitCommon {
       }
     );
   }
-
   get(url, params, headers) {
     return this.service({
       url,
@@ -54,6 +53,12 @@ class Github extends GitCommon {
   }
   getTags(fullName, params) {
     return this.get(`/repos/${fullName}/tags`, params);
+  }
+  getUser(params) {
+    return this.get(`/user`, params);
+  }
+  getOrgs(params) {
+    return this.get(`/user/orgs`, params);
   }
 }
 

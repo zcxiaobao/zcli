@@ -110,7 +110,7 @@ const INIT_TYPE_LIST = [
   { name: "组件", value: INIT_TYPE.COMPONENT },
 ];
 
-const TEMP_HOME = ".zcli";
+const DEFAULT_CLI_HOME = ".zcli";
 
 function getInitType() {
   return makeList({
@@ -145,8 +145,8 @@ function getProjectVersion(initType) {
 }
 
 // 安装缓存目录
-function makeTargetPath() {
-  return path.resolve(`${homedir()}/${TEMP_HOME}`, "template");
+function getDefalutCliTemPath() {
+  return path.resolve(`${homedir()}/${DEFAULT_CLI_HOME}`, "template");
 }
 
 export default async function createTeplate() {
@@ -183,7 +183,7 @@ export default async function createTeplate() {
   // );
   // log.verbose("templateLatest", templateLatest);
 
-  // const targetPath = makeTargetPath();
+  // const targetPath = getDefalutCliTemPath();
   // return {
   //   name: projectName,
   //   initType,
