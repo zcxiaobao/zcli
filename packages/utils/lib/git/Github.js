@@ -23,11 +23,7 @@ class Github extends GitCommon {
     );
     this.service.interceptors.response.use(
       (response) => {
-        if (response.stauts === 200) {
-          return response.data;
-        } else {
-          return null;
-        }
+        return response.data;
       },
       (error) => {
         return Promise.reject(error);

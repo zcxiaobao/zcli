@@ -56,6 +56,8 @@ class Git {
     }
     // 检查远程仓库
     await this.checkRemoteRepo();
+    // 检查是否存在 gitignore
+    await this.checkGitIgnore();
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
@@ -167,20 +169,19 @@ class Git {
     }
   }
   async checkRemoteRepo() {
-    const remoteRepo = await this.gitServer.getRepo(
+    let remoteRepo = await this.gitServer.getRepo(
       this.gitLogin,
       this.projectInfo.name
     );
     if (!remoteRepo) {
       const spinner = ora("开始创建远程仓库...").start();
-      let repo;
       try {
         if (this.gitOwn === REPO_OWNER.USER) {
-          repo = this.gitServer.createRepo({
+          remoteRepo = this.gitServer.createRepo({
             name: this.projectInfo.name,
           });
         } else {
-          repo = await this.gitServer.createOrgRepo(this.gitLogin, {
+          remoteRepo = await this.gitServer.createOrgRepo(this.gitLogin, {
             name: this.projectInfo.name,
           });
         }
@@ -189,13 +190,45 @@ class Git {
       } finally {
         spinner.stop();
       }
-      if (repo) {
+      if (remoteRepo) {
         log.success(`创建远程仓库${this.projectInfo.name}成功`);
       } else {
         throw new Error("远程仓库创建失败");
       }
-      this.repo = repo;
+      this.remoteRepo = remoteRepo;
     }
+  }
+  async checkGitIgnore() {
+    const ignorePath = path.resolve(this.projectPath, ".gitignore");
+    const ignore = readFile(ignorePath);
+    if (!ignore) {
+      writeFile(
+        ignorePath,
+        `.DS_Store
+        node_modules
+        
+        
+        # local env files
+        .env.local
+        .env.*.local
+        
+        # Log files
+        npm-debug.log*
+        yarn-debug.log*
+        yarn-error.log*
+        pnpm-debug.log*
+        
+        # Editor directories and files
+        .idea
+        .vscode
+        *.suo
+        *.ntvs*
+        *.njsproj
+        *.sln
+        *.sw?`
+      );
+    }
+    log.success("自动写入 .gitignore 文件");
   }
 }
 
