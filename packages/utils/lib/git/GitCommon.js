@@ -4,9 +4,9 @@ import { execa } from "execa";
 import { pathExistsSync } from "path-exists";
 import fsExtra from "fs-extra";
 import fs from "node:fs";
-import { makePassword } from "../inquirer.js";
+import { makeConfirm, makePassword } from "../inquirer.js";
 import log from "../log.js";
-import { getDefalutCliPath } from "../Package.js";
+import { readFile } from "../file.js";
 
 const DEFAULT_CLI_HOME = ".zcli";
 const TEMP_TOKEN = ".token";
@@ -21,27 +21,7 @@ function getToken() {
 }
 class GitCommon {
   constructor() {}
-  async prepare() {
-    this.checkCliHomePath();
-    await this.checkGitToken();
-    await this.checkGitUserAndOrgs();
-  }
-  checkCliHomePath() {
-    this.homeCliPath = getDefalutCliPath();
-    if (pathExistsSync(this.homeCliPath)) {
-      fsExtra.ensureDirSync(this.homeCliPath);
-    }
-  }
-  async checkGitToken() {
-    const tokenPath = createTokenPath();
-    if (pathExistsSync(tokenPath)) {
-      this.token = fsExtra.readFileSync(tokenPath).toString();
-    } else {
-      this.token = await getToken();
-      fs.writeFileSync(tokenPath, this.token);
-    }
-    log.verbose("token", this.token);
-  }
+
   async init() {
     const tokenPath = createTokenPath();
     if (pathExistsSync(tokenPath)) {
@@ -52,6 +32,7 @@ class GitCommon {
     }
     log.verbose("token", this.token);
   }
+
   setToken(token) {
     this.token = token;
   }

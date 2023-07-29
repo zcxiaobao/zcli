@@ -6,12 +6,13 @@ function readFile(path, options = {}) {
     const buffer = fsExtra.readFileSync(path);
     if (buffer) {
       if (options.toJSON) {
-        return buffer.toJSON();
+        return JSON.parse(buffer);
       } else {
         return buffer.toString();
       }
     }
   }
+  return null;
 }
 
 function writeFile(path, data, { rewrite = true } = {}) {

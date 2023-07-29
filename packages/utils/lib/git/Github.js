@@ -23,7 +23,11 @@ class Github extends GitCommon {
     );
     this.service.interceptors.response.use(
       (response) => {
-        return response.data;
+        if (response.stauts === 200) {
+          return response.data;
+        } else {
+          return null;
+        }
       },
       (error) => {
         return Promise.reject(error);
@@ -40,6 +44,26 @@ class Github extends GitCommon {
       //   return params;
       // },
     });
+  }
+  post(url, data, params, headers) {
+    return this.service({
+      url,
+      data,
+      params,
+      method: "post",
+      headers,
+    });
+  }
+  getRepo(owner, repo, params) {
+    return this.get(`/repos/${owner}/${repo}`, params).catch((err) => {
+      return null;
+    });
+  }
+  createRepo(data) {
+    return this.post("/user/repos", data);
+  }
+  createOrgRepo(owner, data) {
+    return this.post(`/orgs/${owner}/repos`, data);
   }
   getRepoUrl(fullName) {
     // return `https://github.com/${fullName}.git`;

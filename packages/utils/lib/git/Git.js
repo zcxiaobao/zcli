@@ -1,7 +1,10 @@
+import path from "node:path";
+
 import { pathExistsSync } from "path-exists";
 import fsExtra from "fs-extra";
 import ora from "ora";
-import { makeList, makePassword } from "../inquirer.js";
+import { execa } from "execa";
+import { makeList, makePassword, makeConfirm } from "../inquirer.js";
 import { writeFile, readFile, createFile } from "../file.js";
 import log from "../log.js";
 import { getDefalutCliPath, getGitStroePath } from "../Package.js";
@@ -28,7 +31,9 @@ function createGitServer(gitServer) {
   //   return null;
 }
 class Git {
-  constructor() {}
+  constructor(projectPath) {
+    this.projectPath = projectPath;
+  }
   async prepare() {
     // 初始化缓存目录
     this.checkCliHomePath();
@@ -42,6 +47,15 @@ class Git {
     await this.checkGitUserAndOrgs();
     // 确定当前操作对象
     await this.checkGitOwn();
+    // 获取本地项目信息
+    this.projectInfo = await this.checkProjectInfo(this.projectPath);
+    log.success("成功获取本地项目信息", this.projectInfo);
+    if (!this.projectInfo) {
+      log.warn("请手动创建项目");
+      return;
+    }
+    // 检查远程仓库
+    await this.checkRemoteRepo();
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
@@ -96,7 +110,6 @@ class Git {
     try {
       this.user = await this.gitServer.getUser();
       this.orgs = await this.gitServer.getOrgs();
-      console.log(this.user, this.orgs);
     } catch (e) {
       printErrorLog(e);
     } finally {
@@ -131,6 +144,58 @@ class Git {
     this.gitLogin = gitLogin;
     this.gitOwn = gitOwn;
     log.success("成功获取owner和login信息", gitOwn, gitLogin);
+  }
+  async checkProjectInfo() {
+    const pkgPath = path.resolve(this.projectPath, "package.json");
+    const pkg = readFile(pkgPath, { toJSON: true });
+    console.log(pkg);
+    if (!pkg) {
+      log.warn("当前文件夹中不存在package.json");
+      const isInit = await makeConfirm({
+        message: "是否进行项目初始化(npm init)",
+      });
+      if (isInit) {
+        await execa("npm", ["init", "-y"], { stdout: "inherit" });
+        const { name, version } = readFile(pkgPath, { toJSON: true });
+        return { name, version, pkgPath };
+      } else {
+        return false;
+      }
+    } else {
+      const { name, version } = pkg;
+      return { name, version, pkgPath };
+    }
+  }
+  async checkRemoteRepo() {
+    const remoteRepo = await this.gitServer.getRepo(
+      this.gitLogin,
+      this.projectInfo.name
+    );
+    if (!remoteRepo) {
+      const spinner = ora("开始创建远程仓库...").start();
+      let repo;
+      try {
+        if (this.gitOwn === REPO_OWNER.USER) {
+          repo = this.gitServer.createRepo({
+            name: this.projectInfo.name,
+          });
+        } else {
+          repo = await this.gitServer.createOrgRepo(this.gitLogin, {
+            name: this.projectInfo.name,
+          });
+        }
+      } catch (e) {
+        printErrorLog(e);
+      } finally {
+        spinner.stop();
+      }
+      if (repo) {
+        log.success(`创建远程仓库${this.projectInfo.name}成功`);
+      } else {
+        throw new Error("远程仓库创建失败");
+      }
+      this.repo = repo;
+    }
   }
 }
 
