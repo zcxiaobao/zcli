@@ -252,11 +252,11 @@ class Git {
       // 检查本地未提交代码
       await this.checkNotCommited();
 
-      const branches = await this.git.listRemote["--heads"];
+      const branches = await this.git.listRemote(["--heads"]);
       log.verbose("branches", branches);
-      if (branches?.includes("master")) {
+      if (branches?.includes("refs/heads/master")) {
         await this.pullRemoteRepo("master", {
-          "allow-unrelated-histories": null,
+          "--allow-unrelated-histories": null,
         });
       } else {
         await this.pushRemoteRepo("master");
@@ -307,9 +307,9 @@ class Git {
       await this.git.pull("origin", branchName, options);
       log.success("同步远程分支代码成功");
     } catch (e) {
-      log.error("git pull origin " + branch);
+      log.error("git pull origin " + branchName);
       printErrorLog(e);
-      if (err.message.indexOf("Couldn't find remote ref master") >= 0) {
+      if (e.message.indexOf("Couldn't find remote ref master") >= 0) {
         log.warn("获取远程[master]分支失败");
       }
       process.exit(0);
