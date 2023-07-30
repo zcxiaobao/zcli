@@ -5,7 +5,7 @@ import fsExtra from "fs-extra";
 import ora from "ora";
 import { execa } from "execa";
 import SimpleGit from "simple-git";
-import { makeList, makePassword, makeConfirm } from "../inquirer.js";
+import { makeList, makePassword, makeConfirm, makeInput } from "../inquirer.js";
 import { writeFile, readFile, createFile } from "../file.js";
 import log from "../log.js";
 import { getDefalutCliPath, getGitStroePath } from "../Package.js";
@@ -249,6 +249,34 @@ class Git {
       if (!remotes.find((r) => r.name === "origin")) {
         await this.git.addRemote("origin", this.remoteRepoUrl);
       }
+      // 检查本地未提交代码
+      await this.checkNotCommited();
+    }
+  }
+  async checkNotCommited() {
+    const status = await this.git.status();
+    const { not_added, created, deleted, modified, renamed } = status;
+    if (
+      not_added.length > 0 ||
+      created.length > 0 ||
+      deleted.length > 0 ||
+      modified.length > 0 ||
+      renamed.length > 0
+    ) {
+      log.verbose("status", status);
+      await this.git.add(not_added);
+      await this.git.add(created);
+      await this.git.add(deleted);
+      await this.git.add(modified);
+      await this.git.add(renamed.map((_) => i.to));
+      const message = await makeInput({
+        message: "请输入 commit 信息",
+        validate(val) {
+          return val.length > 0;
+        },
+      });
+      await this.git(message);
+      log.success("本地 commit 提交成功");
     }
   }
 }
