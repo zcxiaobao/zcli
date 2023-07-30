@@ -290,15 +290,22 @@ class Git {
     }
   }
   async pushRemoteRepo(branchName) {
-    log.info(`推送代码到远程${branchName}分支`);
-    await this.git.push("origin", branchName);
-    log.success(`推送代码成功`);
+    const spinner = ora(`推送代码到远程${branchName}分支`).start();
+    try {
+      await this.git.push("origin", branchName);
+      log.success(`推送代码成功`);
+    } catch (e) {
+      printErrorLog(e);
+    } finally {
+      spinner.stop();
+    }
   }
 
   async pullRemoteRepo(branchName, options) {
     const spinner = ora(`同步远程${branchName}分支代码...`).start();
     try {
       await this.git.pull("origin", branchName, options);
+      log.success("同步远程分支代码成功");
     } catch (e) {
       log.error("git pull origin " + branch);
       printErrorLog(e);
