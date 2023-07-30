@@ -4,6 +4,7 @@ import { pathExistsSync } from "path-exists";
 import fsExtra from "fs-extra";
 import ora from "ora";
 import { execa } from "execa";
+import SimpleGit from "simple-git";
 import { makeList, makePassword, makeConfirm } from "../inquirer.js";
 import { writeFile, readFile, createFile } from "../file.js";
 import log from "../log.js";
@@ -33,6 +34,7 @@ function createGitServer(gitServer) {
 class Git {
   constructor(projectPath) {
     this.projectPath = projectPath;
+    this.git = SimpleGit(projectPath);
   }
   async prepare() {
     // 初始化缓存目录
@@ -58,6 +60,11 @@ class Git {
     await this.checkRemoteRepo();
     // 检查是否存在 gitignore
     await this.checkGitIgnore();
+
+    // 链接远程仓库
+    await this.linkRemoteRepo();
+    // commit 提交
+    await this.initCommit();
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
@@ -195,8 +202,9 @@ class Git {
       } else {
         throw new Error("远程仓库创建失败");
       }
-      this.remoteRepo = remoteRepo;
     }
+    this.remoteRepo = remoteRepo;
+    this.remoteRepoUrl = remoteRepo.ssh_url;
   }
   async checkGitIgnore() {
     const ignorePath = path.resolve(this.projectPath, ".gitignore");
@@ -229,6 +237,19 @@ class Git {
       );
     }
     log.success("自动写入 .gitignore 文件");
+  }
+
+  async linkRemoteRepo() {
+    const gitPath = path.resolve(this.projectPath, ".git");
+    if (!pathExistsSync(gitPath)) {
+      log.info("执行git初始化");
+      await this.git.init(this.projectPath);
+      log.info("git初始化完成");
+      const remotes = await this.git.getRemotes();
+      if (!remotes.find((r) => r.name === "origin")) {
+        await this.git.addRemote("origin", this.remoteRepoUrl);
+      }
+    }
   }
 }
 
