@@ -64,7 +64,7 @@ class Git {
     // 链接远程仓库
     await this.linkRemoteRepo();
     // commit 提交
-    await this.initCommit();
+    // await this.initCommit();
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
@@ -251,6 +251,16 @@ class Git {
       }
       // 检查本地未提交代码
       await this.checkNotCommited();
+
+      const branches = await this.git.listRemote["--heads"];
+      log.verbose("branches", branches);
+      if (branches?.includes("master")) {
+        await this.pullRemoteRepo("master", {
+          "allow-unrelated-histories": null,
+        });
+      } else {
+        await this.pushRemoteRepo("master");
+      }
     }
   }
   async checkNotCommited() {
@@ -275,8 +285,29 @@ class Git {
           return val.length > 0;
         },
       });
-      await this.git(message);
+      await this.git.commit(message);
       log.success("本地 commit 提交成功");
+    }
+  }
+  async pushRemoteRepo(branchName) {
+    log.info(`推送代码到远程${branchName}分支`);
+    await this.git.push("origin", branchName);
+    log.success(`推送代码成功`);
+  }
+
+  async pullRemoteRepo(branchName, options) {
+    const spinner = ora(`同步远程${branchName}分支代码...`).start();
+    try {
+      await this.git.pull("origin", branchName, options);
+    } catch (e) {
+      log.error("git pull origin " + branch);
+      printErrorLog(e);
+      if (err.message.indexOf("Couldn't find remote ref master") >= 0) {
+        log.warn("获取远程[master]分支失败");
+      }
+      process.exit(0);
+    } finally {
+      spinner.stop();
     }
   }
 }
