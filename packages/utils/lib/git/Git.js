@@ -51,7 +51,7 @@ class Git {
     await this.checkGitOwn();
     // 获取本地项目信息
     this.projectInfo = await this.checkProjectInfo(this.projectPath);
-    log.success("成功获取本地项目信息", this.projectInfo);
+    log.verbose("成功获取本地项目信息", this.projectInfo);
     if (!this.projectInfo) {
       log.warn("请手动创建项目");
       return;
@@ -340,6 +340,9 @@ class Git {
       });
       await this.git.commit(message);
       log.success("本地 commit 提交成功");
+    } else {
+      log.info("本地代码没有改变，无需 commit");
+      process.exit(0);
     }
   }
   async pullRemoteDevAndBranch() {
