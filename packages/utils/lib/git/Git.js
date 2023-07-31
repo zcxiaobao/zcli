@@ -63,8 +63,23 @@ class Git {
 
     // 链接远程仓库
     await this.linkRemoteRepo();
+    // 创建 dev 分支，同时创建一个默认 dev 分支
+    //
     // commit 提交
-    // await this.initCommit();
+    await this.commit();
+  }
+  async commit() {
+    await this.checkCurrentBranch();
+    // 1. 检查是否有冲突
+    await this.checkConficted();
+    // 2. 检查是否有 stash
+    await this.checkStash();
+    // 3. 检查是否有未提交部分
+    await this.checkNotCommited();
+    // 4. 拉取远程 dev 和当前分支代码
+    await this.pullRemoteDevAndBranch();
+    // 5. 推到远程对应分支
+    await this.pushRemoteRepo(this.branch);
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
@@ -255,11 +270,44 @@ class Git {
       const branches = await this.git.listRemote(["--heads"]);
       log.verbose("branches", branches);
       if (branches?.includes("refs/heads/master")) {
+        log.info("远程存在 master 分支，强制合并");
         await this.pullRemoteRepo("master", {
           "--allow-unrelated-histories": null,
         });
       } else {
         await this.pushRemoteRepo("master");
+      }
+    }
+  }
+  async checkCurrentBranch() {
+    const status = await this.git.status();
+    this.branch = status.current;
+    const isCommit = await makeConfirm({
+      message: `当前分支为 ${this.branch}，是否继续执行 commit 指令？`,
+    });
+    if (!isCommit) {
+      throw new Error("当前工作分支错误，请手动切换分支");
+    }
+  }
+  async checkConficted() {
+    log.info("代码冲突检查");
+    const { conflicted } = await this.git.status();
+    if (conflicted.length > 0) {
+      throw new Error("当前代码存在冲突，请手动合并后再试！");
+    }
+    log.success("代码冲突检查通过");
+  }
+  async checkStash() {
+    log.info("检查 stash 记录");
+    let stashList = await this.git.stashList();
+
+    if (stashList.all.length > 0) {
+      const stashPop = await makeConfirm({
+        message: "stash 中存有部分代码，是否pop？",
+      });
+      if (stashPop) {
+        await this.git.stash(["pop"]);
+        log.success("stash pop 成功");
       }
     }
   }
@@ -287,6 +335,20 @@ class Git {
       });
       await this.git.commit(message);
       log.success("本地 commit 提交成功");
+    }
+  }
+  async pullRemoteDevAndBranch() {
+    log.info(`合并[origin master] -> [${this.branch}]`);
+    await this.pullRemoteRepo("master");
+    log.success("合并远程 [master] 分支成功");
+
+    log.info(`检查远程 [${this.branch}] 分支`);
+    const remoteList = await this.git.listRemote(["--heads"]);
+    if (remoteList.includes(this.branch)) {
+      await this.pullRemoteRepo(this.branch);
+      log.success(`合并远程 [${this.branch}] 分支`);
+    } else {
+      log.warn(`不存在远程 [${this.branch}] 分支`);
     }
   }
   async pushRemoteRepo(branchName) {
