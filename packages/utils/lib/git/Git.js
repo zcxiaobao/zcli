@@ -199,7 +199,7 @@ class Git {
       const spinner = ora("开始创建远程仓库...").start();
       try {
         if (this.gitOwn === REPO_OWNER.USER) {
-          remoteRepo = this.gitServer.createRepo({
+          remoteRepo = await this.gitServer.createRepo({
             name: this.projectInfo.name,
           });
         } else {
@@ -277,6 +277,11 @@ class Git {
       } else {
         await this.pushRemoteRepo("master");
       }
+
+      if (!branches || !branches.includes("refs/heads/dev")) {
+        await this.git.checkout(["-b", "dev"]);
+        await this.pushRemoteRepo("dev");
+      }
     }
   }
   async checkCurrentBranch() {
@@ -338,9 +343,9 @@ class Git {
     }
   }
   async pullRemoteDevAndBranch() {
-    log.info(`合并[origin master] -> [${this.branch}]`);
-    await this.pullRemoteRepo("master");
-    log.success("合并远程 [master] 分支成功");
+    log.info(`合并[origin dev] -> [${this.branch}]`);
+    await this.pullRemoteRepo("dev");
+    log.success("合并远程 [dev] 分支成功");
 
     log.info(`检查远程 [${this.branch}] 分支`);
     const remoteList = await this.git.listRemote(["--heads"]);
@@ -352,7 +357,7 @@ class Git {
     }
   }
   async pushRemoteRepo(branchName) {
-    const spinner = ora(`推送代码到远程${branchName}分支`).start();
+    const spinner = ora(`推送代码到远程 ${branchName} 分支`).start();
     try {
       await this.git.push("origin", branchName);
       log.success(`推送代码成功`);
@@ -364,7 +369,7 @@ class Git {
   }
 
   async pullRemoteRepo(branchName, options) {
-    const spinner = ora(`同步远程${branchName}分支代码...`).start();
+    const spinner = ora(`同步远程 ${branchName} 分支代码...`).start();
     try {
       await this.git.pull("origin", branchName, options);
       log.success("同步远程分支代码成功");
