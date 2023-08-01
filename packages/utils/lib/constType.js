@@ -30,4 +30,5 @@ export const STORE_FILES = {
   GIT_TOKEN_FILE: ".git_token",
   GIT_OWNER_FILE: ".git_own",
   GIT_LOGIN_FILE: ".git_login",
+  GIT_BRANCH_FILE: ".git_branch",
 };

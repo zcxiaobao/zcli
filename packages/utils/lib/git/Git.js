@@ -43,6 +43,7 @@ class Git {
   constructor(projectPath) {
     this.projectPath = projectPath;
     this.pkgPath = path.resolve(this.projectPath, "package.json");
+    this.branchRule = {};
     this.git = SimpleGit(projectPath);
   }
   async init() {
@@ -58,6 +59,8 @@ class Git {
     await this.checkGitToken();
     // 确定当前操作对象
     await this.checkGitOwn();
+    // 确定各分支命名规则
+    await this.checkGitBranchRule();
     // 获取本地项目信息
     this.projectInfo = await this.checkProjectInfo(this.projectPath);
     log.verbose("成功获取本地项目信息", this.projectInfo);
@@ -86,16 +89,16 @@ class Git {
     await this.pushRemoteRepo(this.branch);
   }
   async publish() {
-    await this.checkoutBranch("dev");
+    await this.checkoutBranch(this.branchRule.dev);
     await this.mergeBranchToDev();
     await this.generatorTag();
-    await this.mergeBranch("dev", "master");
+    await this.mergeBranch(this.branchRule.dev, this.branchRule.master);
     await this.iteratorVersion();
-    await this.mergeBranch("master", "dev");
-    await this.pullRemoteRepo("master");
-    await this.pushRemoteRepo("master");
-    await this.pullRemoteRepo("dev");
-    await this.pushRemoteRepo("dev");
+    await this.mergeBranch(this.branchRule.master, this.branchRule.dev);
+    await this.pullRemoteRepo(this.branchRule.master);
+    await this.pushRemoteRepo(this.branchRule.master);
+    await this.pullRemoteRepo(this.branchRule.dev);
+    await this.pushRemoteRepo(this.branchRule.dev);
     await this.deleteLocalBranch();
     await this.deleteRemoteBranch();
   }
@@ -200,6 +203,43 @@ class Git {
     this.gitOwn = gitOwn;
     log.success("成功获取 owner 和 login 信息", gitOwn, gitLogin);
   }
+  async checkGitBranchRule() {
+    const gitBranchRulePath = this.store.branch;
+    let branchRule = readFile(gitBranchRulePath, { toJSON: true });
+    if (branchRule) {
+      branchRule = JSON.parse(branchRule);
+      console.log(typeof branchRule);
+      this.branchRule.master = branchRule.master;
+      this.branchRule.dev = branchRule.dev;
+      this.branchRule.feature = branchRule.feature;
+    } else {
+      this.branchRule.master = await makeInput({
+        message: "请输入主分支名称",
+        validata(val) {
+          return val > 0;
+        },
+        defaultValue: "master",
+      });
+      this.branchRule.dev = await makeInput({
+        message: "请输入开发主分支名称",
+        validata(val) {
+          return val > 0;
+        },
+        defaultValue: "dev",
+      });
+      this.branchRule.feature = await makeInput({
+        message: "请输入开发分支前缀名",
+        validata(val) {
+          return val > 0;
+        },
+        defaultValue: "feature",
+      });
+      fsExtra.writeJSONSync(gitBranchRulePath, JSON.stringify(this.branchRule));
+    }
+    log.success(
+      `\n当前 git 中，\n主分支: ${this.branchRule.master}\n开发分支: ${this.branchRule.dev} \n子开发分支: ${this.branchRule.feature}`
+    );
+  }
   async checkProjectInfo() {
     const pkgPath = path.resolve(this.projectPath, "package.json");
     const pkg = readFile(pkgPath, { toJSON: true });
@@ -300,18 +340,22 @@ class Git {
 
       const branches = await this.git.listRemote(["--heads"]);
       log.verbose("branches", branches);
-      if (branches?.includes("refs/heads/master")) {
-        log.info("远程存在 master 分支，强制合并");
-        await this.pullRemoteRepo("master", {
+      if (branches?.includes(`refs/heads/${this.branchRule.master}`)) {
+        log.info(`远程存在 ${this.branchRule.master}  分支，强制合并`);
+        await this.pullRemoteRepo(this.branchRule.master, {
           "--allow-unrelated-histories": null,
         });
       } else {
-        await this.pushRemoteRepo("master");
+        await this.git.checkout(["-b", this.branchRule.master]);
+        await this.pushRemoteRepo(this.branchRule.master);
       }
 
-      if (!branches || !branches.includes("refs/heads/dev")) {
-        await this.git.checkout(["-b", "dev"]);
-        await this.pushRemoteRepo("dev");
+      if (
+        !branches ||
+        !branches.includes(`refs/heads/${this.branchRule.dev}`)
+      ) {
+        await this.git.checkout(["-b", this.branchRule.dev]);
+        await this.pushRemoteRepo(this.branchRule.dev);
       }
     }
   }
@@ -387,7 +431,7 @@ class Git {
     }
   }
   async pullRemoteDevAndBranch() {
-    await this.pullRemoteRepo("dev");
+    await this.pullRemoteRepo(this.branchRule.dev);
     const spinner = ora(`检查远程 [${this.branch}] 分支是否存在`).start();
     // log.info(`检查远程 [${this.branch}] 分支`);
     const remoteList = await this.git.listRemote(["--heads"]);
@@ -451,7 +495,10 @@ class Git {
     if (type === "tag") {
       reg = /.+?refs\/tags\/([\w\.]+)/g;
     } else {
-      reg = /.+?refs\/heads\/(feature\/[\w\.]+)/g;
+      reg = new RegExp(
+        `.+?refs\/heads\/(${this.branchRule.feature}\/[\\w\\.]+)`,
+        "g"
+      );
     }
     return remotes
       .split("\n")
@@ -481,8 +528,8 @@ class Git {
     if (needMerged?.length > 0) {
       this.needMerged = needMerged;
       for (let branch of needMerged) {
-        spinner.text = `开始合并代码 [${branch}] -> [dev]`;
-        await this.git.mergeFromTo(branch, "dev");
+        spinner.text = `开始合并代码 [${branch}] -> [${this.branchRule.dev}]`;
+        await this.git.mergeFromTo(branch, this.branchRule.dev);
       }
     }
     spinner.stop();
@@ -554,8 +601,8 @@ class Git {
   }
   async iteratorRemotePackageVersion(incVersion) {
     const nowBranch = await this.git.status().current;
-    if (nowBranch !== "master") {
-      await this.checkoutBranch("master");
+    if (nowBranch !== this.branchRule.master) {
+      await this.checkoutBranch(this.branchRule.master);
     }
     await this.checkNotCommited(incVersion, `版本迭代至${incVersion}`);
   }

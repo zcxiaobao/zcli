@@ -4,8 +4,9 @@ import { pathExistsSync } from "path-exists";
 function readFile(path, options = {}) {
   if (pathExistsSync(path)) {
     const buffer = fsExtra.readFileSync(path);
+
     if (buffer) {
-      if (options.toJSON) {
+      if (options.toJSON && buffer.length) {
         return JSON.parse(buffer);
       } else {
         return buffer.toString();
@@ -14,6 +15,20 @@ function readFile(path, options = {}) {
   }
   return null;
 }
+
+// function readJSONFile(path) {
+//   if (pathExistsSync(path)) {
+//     const buffer = fsExtra.readFileSync(path);
+//     if (buffer) {
+//       if (options.toJSON) {
+//         return JSON.parse(buffer);
+//       } else {
+//         return buffer.toString();
+//       }
+//     }
+//   }
+//   return null;
+// }
 
 function writeFile(path, data, { rewrite = true } = {}) {
   if (pathExistsSync(path)) {
