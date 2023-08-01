@@ -92,7 +92,8 @@ class Git {
     await this.checkoutBranch("dev");
     await this.mergeBranchToDev();
     await this.pushRemoteRepo("dev");
-    // await this.generatorTag();
+    await this.generatorTag();
+    await this.iteratorVersion();
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
@@ -416,12 +417,12 @@ class Git {
     log.success(`本地分支切换到 ${branchName} `);
   }
   async getRemoteBranchList(type) {
-    const remotes = await this.git.listRemote(["--heads"]);
+    const remotes = await this.git.listRemote(["--refs"]);
     let reg;
     if (type === "tag") {
-      reg = /.+?refs\/tags\/(release\/[\w]+)/g;
+      reg = /.+?refs\/tags\/([\w\.]+)/g;
     } else {
-      reg = /.+?refs\/heads\/(feature\/[\w]+)/g;
+      reg = /.+?refs\/heads\/(feature\/[\w\.]+)/g;
     }
     return remotes
       .split("\n")
@@ -435,8 +436,6 @@ class Git {
       .filter((_) => _);
   }
   async mergeBranchToDev() {
-    // const remotes = await this.git.listRemote(["--heads"]);
-    // const featureReg = /.+?refs\/heads\/(feature\/[\w]+)/g;
     const mergeBranchList = await this.getRemoteBranchList("head");
     const needMerged = await makeCheckbox({
       message: "请选择要合并的分支",
@@ -453,9 +452,28 @@ class Git {
     spinner.stop();
     log.success("代码合并完成");
   }
-  //   async generatorTag() {
-  //     log.info("获取远程 tag 列表");
-  //   }
+  async generatorTag() {
+    log.info("获取远程 tag 列表");
+    const reomoteTagList = await this.getRemoteBranchList("tag");
+    const tag = this.projectInfo.version;
+    if (reomoteTagList?.includes(tag)) {
+      log.info(`远程 tag 已存在`, tag);
+      await this.git.push(["origin", `:refs/tags/${tag}`]);
+      log.info(`远程 tag 已删除`, tag);
+    }
+
+    const localTagList = await this.git.tags();
+    if (localTagList?.all?.includes(tag)) {
+      log.info(`本地 tag 已存在`, tag);
+      await this.git.push(["-d", tag]);
+      log.info(`本地 tag 已删除`, tag);
+    }
+
+    await this.git.addTag(tag);
+    log.success(`本地 tag 创建成功`, tag);
+    await this.git.pushTags("origin");
+    log.success(`远程 tag 推送成功`, tag);
+  }
 }
 
 export default Git;
