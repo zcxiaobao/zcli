@@ -52,7 +52,7 @@ class Git {
     await this.initGitDefault();
   }
   async prepare() {
-    await this.init();
+    // await this.init();
     // 确定 git 托管平台信息
     await this.checkGitServer();
     // git 所需 token 信息
@@ -79,7 +79,7 @@ class Git {
     //
     // commit 提交
     // await this.commit();
-    await this.publish();
+    // await this.publish();
   }
   async commit() {
     await this.checkCurrentBranch();

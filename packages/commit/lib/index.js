@@ -18,7 +18,9 @@ class CommitCommand extends Command {
     log.info("commit指令启动");
     const projectPath = process.cwd();
     this.git = new Git(projectPath);
+    await this.git.init();
     await this.git.prepare();
+    await this.git.commit();
   }
 }
 
