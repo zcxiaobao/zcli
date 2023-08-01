@@ -45,17 +45,20 @@ class Git {
     this.pkgPath = path.resolve(this.projectPath, "package.json");
     this.git = SimpleGit(projectPath);
   }
-  async prepare() {
+  async init() {
     // 初始化缓存目录
     this.checkCliHomePath();
     // 初始化配置的缓存文件
-    this.initGitDefault();
+    await this.initGitDefault();
+  }
+  async prepare() {
+    await this.init();
     // 确定 git 托管平台信息
     await this.checkGitServer();
     // git 所需 token 信息
     await this.checkGitToken();
     // 获取个人和组织信息
-    await this.checkGitUserAndOrgs();
+    // await this.checkGitUserAndOrgs();
     // 确定当前操作对象
     await this.checkGitOwn();
     // 获取本地项目信息
@@ -111,14 +114,15 @@ class Git {
       fsExtra.ensureDirSync(this.homeCliPath);
     }
   }
-  initGitDefault() {
-    const spinner = ora("初始化git...").start();
+  async initGitDefault() {
+    const spinner = ora("检查 git 缓存目录...").start();
     this.store = getGitStroePath();
     for (let filePath of Object.values(this.store)) {
       createFile(filePath);
     }
-    log.success("git 初始化完成");
     spinner.stop();
+    await sleep(0);
+    log.success("git 缓存目录检查完成");
   }
   async checkGitToken() {
     const tokenPath = this.store.token;
@@ -150,38 +154,50 @@ class Git {
       writeFile(gitServerPath, gitServer);
       this.gitServer = createGitServer(gitServer);
     }
-    log.success("当前托管平台", gitServer);
+    log.success("当前托管平台: ", gitServer);
     this.gitServer = createGitServer(gitServer);
   }
-  async checkGitUserAndOrgs() {
-    const spinner = ora("获取用户和组织信息中...").start();
-    try {
-      this.user = await this.gitServer.getUser();
-      this.orgs = await this.gitServer.getOrgs();
-    } catch (e) {
-      printErrorLog(e);
-    } finally {
-      spinner.stop();
-      log.verbose("用户和组织信息获取成功");
-    }
-  }
+  //   async checkGitUserAndOrgs() {
+  //     const spinner = ora("获取用户和组织信息中...").start();
+  //     try {
+  //       this.user = await this.gitServer.getUser();
+  //       this.orgs = await this.gitServer.getOrgs();
+  //     } catch (e) {
+  //       printErrorLog(e);
+  //     } finally {
+  //       spinner.stop();
+  //       log.verbose("用户和组织信息获取成功");
+  //     }
+  //   }
   async checkGitOwn() {
     const gitOwnPath = this.store.owner;
     const gitLoginPath = this.store.login;
     let gitOwn = readFile(gitOwnPath);
     let gitLogin = readFile(gitLoginPath);
     if (!gitLogin || !gitOwn) {
-      gitOwn = await makeList({
-        message: "请选择远程仓库类型",
-        choices: this.orgs.length > 0 ? GIT_OWNER_TYPE : GIT_OWNER_TYPE_ONLY,
-      });
+      const spinner = ora("获取用户和组织信息中...").start();
+      try {
+        this.user = await this.gitServer.getUser();
+        this.orgs = await this.gitServer.getOrgs();
+      } catch (e) {
+        printErrorLog(e);
+      } finally {
+        spinner.stop();
+      }
+      if (!gitOwn) {
+        gitOwn = await makeList({
+          message: "请选择远程仓库类型",
+          choices: this.orgs.length > 0 ? GIT_OWNER_TYPE : GIT_OWNER_TYPE_ONLY,
+        });
+      }
+
       if (gitOwn === REPO_OWNER.USER) {
-        gitLogin = this.user.login;
+        gitLogin = this.user?.login;
       } else {
         gitLogin = await makeList({
-          message: "请选择",
+          message: "请选择组织",
           choices: this.orgs.map((i) => ({
-            name: i.login,
+            name: i.login || i.name,
             value: i.login,
           })),
         });
@@ -191,13 +207,13 @@ class Git {
     }
     this.gitLogin = gitLogin;
     this.gitOwn = gitOwn;
-    log.verbose("成功获取 owner 和 login 信息", gitOwn, gitLogin);
+    log.success("成功获取 owner 和 login 信息", gitOwn, gitLogin);
   }
   async checkProjectInfo() {
     const pkgPath = path.resolve(this.projectPath, "package.json");
     const pkg = readFile(pkgPath, { toJSON: true });
     if (!pkg) {
-      log.warn("当前文件夹中不存在package.json");
+      log.warn("当前文件夹中不存在 package.json ");
       const isInit = await makeConfirm({
         message: "是否进行项目初始化(npm init -y)",
       });
@@ -235,6 +251,7 @@ class Git {
       } finally {
         spinner.stop();
       }
+      await sleep(0);
       if (remoteRepo) {
         log.success(`创建远程仓库 ${this.projectInfo.name} 成功`);
       } else {
@@ -242,7 +259,7 @@ class Git {
       }
     }
     this.remoteRepo = remoteRepo;
-    this.remoteRepoUrl = remoteRepo.ssh_url;
+    this.remoteRepoUrl = remoteRepo.ssh_url || remoteRepo.http_url;
   }
   async checkGitIgnore() {
     const ignorePath = path.resolve(this.projectPath, ".gitignore");
@@ -273,16 +290,16 @@ class Git {
         *.sln
         *.sw?`
       );
+      log.success("自动写入 .gitignore 文件");
     }
-    log.success("自动写入 .gitignore 文件");
   }
 
   async linkRemoteRepo() {
     const gitPath = path.resolve(this.projectPath, ".git");
     if (!pathExistsSync(gitPath)) {
-      log.verbose("执行git初始化");
+      log.verbose("执行 git 初始化");
       await this.git.init(this.projectPath);
-      log.verbose("git初始化完成");
+      log.success("git 初始化完成");
       const remotes = await this.git.getRemotes();
       if (!remotes.find((r) => r.name === "origin")) {
         await this.git.addRemote("origin", this.remoteRepoUrl);
@@ -314,19 +331,22 @@ class Git {
       message: `当前分支为 ${this.branch}，是否继续执行 commit 指令？`,
     });
     if (!isCommit) {
-      throw new Error("当前工作分支错误，请手动切换分支");
+      throw new Error("当前工作分支错误，请手动切换分支再试!");
     }
   }
   async checkConficted() {
-    log.info("代码冲突检查");
+    const spinner = ora("代码冲突检查...").start();
     const { conflicted } = await this.git.status();
     if (conflicted.length > 0) {
       throw new Error("当前代码存在冲突，请手动合并后再试！");
     }
+    spinner.stop();
+    await sleep(0);
     log.success("代码冲突检查通过");
   }
   async checkStash() {
-    log.info("检查 stash 记录");
+    const spinner = ora("检查 stash 记录...").start();
+    // log.info("检查 stash 记录");
     let stashList = await this.git.stashList();
 
     if (stashList.all.length > 0) {
@@ -335,7 +355,12 @@ class Git {
       });
       if (stashPop) {
         await this.git.stash(["pop"]);
+        spinner.stop();
+        await sleep(0);
         log.success("stash pop 成功");
+      } else {
+        spinner.stop();
+        await sleep(0);
       }
     }
   }
@@ -371,16 +396,18 @@ class Git {
     }
   }
   async pullRemoteDevAndBranch() {
-    // log.info(`合并[origin dev] -> [${this.branch}]`);
     await this.pullRemoteRepo("dev");
-    // log.success("合并远程 [dev] 分支成功");
-
-    log.info(`检查远程 [${this.branch}] 分支`);
+    const spinner = ora(`检查远程 [${this.branch}] 分支`).start();
+    // log.info(`检查远程 [${this.branch}] 分支`);
     const remoteList = await this.git.listRemote(["--heads"]);
     if (remoteList.includes(this.branch)) {
       await this.pullRemoteRepo(this.branch);
-      //   log.success(`合并远程 [${this.branch}] 分支`);
+      spinner.stop();
+      await sleep(0);
+      log.success(`合并远程 [${this.branch}] 分支`);
     } else {
+      spinner.stop();
+      await sleep(0);
       log.warn(`不存在远程 [${this.branch}] 分支`);
     }
   }
@@ -388,8 +415,9 @@ class Git {
     const spinner = ora(`推送代码到远程 ${branchName} 分支`).start();
     try {
       await this.git.push("origin", branchName);
-      //   log.success(`推送代码成功`);
-      spinner.succeed("推送代码成功");
+      spinner.stop();
+      await sleep(0);
+      log.success(`推送代码成功`);
     } catch (e) {
       printErrorLog(e);
       spinner.stop();
@@ -400,8 +428,8 @@ class Git {
     const spinner = ora(`同步远程 ${branchName} 分支代码...`).start();
     try {
       await this.git.pull("origin", branchName, options);
-      spinner.stop("同步远程分支代码成功");
-      //   await sleep(100);
+      spinner.stop();
+      await sleep(0);
       log.success("同步远程分支代码成功");
       spinner.stop();
     } catch (e) {
@@ -424,7 +452,7 @@ class Git {
     } else {
       await this.git.checkoutLocalBranch(branchName);
     }
-    log.success(`本地分支切换到 ${branchName} `);
+    log.verbose(`本地分支切换到 ${branchName} `);
   }
   async getRemoteBranchList(type) {
     const remotes = await this.git.listRemote(["--refs"]);
@@ -446,12 +474,19 @@ class Git {
       .filter((_) => _);
   }
   async mergeBranchToDev() {
+    let spinner = ora("获取所有分支...").start();
     const mergeBranchList = await this.getRemoteBranchList("head");
+    spinner.stop();
+    if (!mergeBranchList || mergeBranchList.length === 0) {
+      log.warn("没有开发分支等待合并!!!");
+      process.exit(0);
+    }
     const needMerged = await makeCheckbox({
       message: "请选择要合并的分支",
       choices: mergeBranchList.map((_) => ({ name: _, value: _ })),
     });
-    const spinner = ora("开始合并代码").start();
+
+    spinner = ora("开始合并代码").start();
     if (needMerged?.length > 0) {
       this.needMerged = needMerged;
       for (let branch of needMerged) {
@@ -460,29 +495,39 @@ class Git {
       }
     }
     spinner.stop();
+    await sleep(0);
     log.success("代码合并完成");
   }
   async generatorTag() {
-    log.info("获取远程 tag 列表");
+    let spinner = ora("检查远程仓库 tag ...").start();
     const reomoteTagList = await this.getRemoteBranchList("tag");
     const tag = this.projectInfo.version;
     if (reomoteTagList?.includes(tag)) {
-      log.info(`远程 tag 已存在`, tag);
+      log.verbose(`远程 tag 已存在`, tag);
       await this.git.push(["origin", `:refs/tags/${tag}`]);
-      log.info(`远程 tag 已删除`, tag);
+      log.verbose(`远程 tag 已删除`, tag);
     }
-
+    spinner.stop();
+    await sleep(0);
+    spinner = ora("检查本地仓库 tag ...").start();
     const localTagList = await this.git.tags();
     if (localTagList?.all?.includes(tag)) {
-      log.info(`本地 tag 已存在`, tag);
+      log.verbose(`本地 tag 已存在`, tag);
       await this.git.tag(["-d", tag]);
-      log.info(`本地 tag 已删除`, tag);
+      log.verbose(`本地 tag 已删除`, tag);
     }
+    spinner.stop();
 
+    await sleep(0);
+
+    spinner = ora("创建 tag，并推到远程仓库...");
     await this.git.addTag(tag);
-    log.success(`本地 tag 创建成功`, tag);
+    log.verbose(`本地 tag 创建成功`, tag);
     await this.git.pushTags("origin");
-    log.success(`远程 tag 推送成功`, tag);
+    log.verbose(`远程 tag 推送成功`, tag);
+    spinner.stop();
+    await sleep(0);
+    log.success("tag 创建成功", tag);
   }
 
   async iteratorVersion() {
@@ -519,7 +564,6 @@ class Git {
   async iteratorRemotePackageVersion(incVersion) {
     const nowBranch = await this.git.status().current;
     if (nowBranch !== "master") {
-      log.info("切换至 [master] 分支");
       await this.checkoutBranch("master");
     }
     await this.checkNotCommited(incVersion, `版本迭代至${incVersion}`);
@@ -535,7 +579,7 @@ class Git {
         await this.git.deleteLocalBranch(branch);
       }
     }
-    log.success("删除本地分支成功");
+    log.success("删除本地分支开发成功: ", this.needMerged?.join(" || "));
   }
 
   async deleteRemoteBranch() {
@@ -545,7 +589,7 @@ class Git {
         await this.git.push(["origin", "--delete", branch]);
       }
     }
-    log.success("删除远程分支成功");
+    log.success("删除远程分支成功: ", this.needMerged?.join(" || "));
   }
 }
 
