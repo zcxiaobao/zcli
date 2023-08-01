@@ -52,13 +52,10 @@ class Git {
     await this.initGitDefault();
   }
   async prepare() {
-    // await this.init();
     // 确定 git 托管平台信息
     await this.checkGitServer();
     // git 所需 token 信息
     await this.checkGitToken();
-    // 获取个人和组织信息
-    // await this.checkGitUserAndOrgs();
     // 确定当前操作对象
     await this.checkGitOwn();
     // 获取本地项目信息
@@ -72,14 +69,8 @@ class Git {
     await this.checkRemoteRepo();
     // 检查是否存在 gitignore
     await this.checkGitIgnore();
-
     // 链接远程仓库
     await this.linkRemoteRepo();
-    // 创建 dev 分支，同时创建一个默认 dev 分支
-    //
-    // commit 提交
-    // await this.commit();
-    // await this.publish();
   }
   async commit() {
     await this.checkCurrentBranch();
@@ -358,10 +349,10 @@ class Git {
         spinner.stop();
         await sleep(0);
         log.success("stash pop 成功");
-      } else {
-        spinner.stop();
-        await sleep(0);
       }
+    } else {
+      spinner.stop();
+      await sleep(0);
     }
   }
   async checkNotCommited(message, loginfo = "本地 commit 提交成功") {
