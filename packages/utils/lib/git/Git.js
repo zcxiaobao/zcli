@@ -388,27 +388,27 @@ class Git {
   }
   async pullRemoteDevAndBranch() {
     await this.pullRemoteRepo("dev");
-    const spinner = ora(`检查远程 [${this.branch}] 分支`).start();
+    const spinner = ora(`检查远程 [${this.branch}] 分支是否存在`).start();
     // log.info(`检查远程 [${this.branch}] 分支`);
     const remoteList = await this.git.listRemote(["--heads"]);
     if (remoteList.includes(this.branch)) {
       await this.pullRemoteRepo(this.branch);
       spinner.stop();
       await sleep(0);
-      log.success(`合并远程 [${this.branch}] 分支`);
+      log.success(`远程 [${this.branch}] 分支存在，pull 其代码`);
     } else {
       spinner.stop();
       await sleep(0);
-      log.warn(`不存在远程 [${this.branch}] 分支`);
+      log.warn(`远程不存在 [${this.branch}] 分支，已创建`);
     }
   }
   async pushRemoteRepo(branchName) {
-    const spinner = ora(`推送代码到远程 ${branchName} 分支`).start();
+    const spinner = ora(`推送代码到远程 [${branchName}] 分支`).start();
     try {
       await this.git.push("origin", branchName);
       spinner.stop();
       await sleep(0);
-      log.success(`推送代码成功`);
+      log.success(`推送代码到远程 [${branchName}] 分支成功`);
     } catch (e) {
       printErrorLog(e);
       spinner.stop();
@@ -416,12 +416,12 @@ class Git {
   }
 
   async pullRemoteRepo(branchName, options) {
-    const spinner = ora(`同步远程 ${branchName} 分支代码...`).start();
+    const spinner = ora(`同步远程 [${branchName}] 分支代码...`).start();
     try {
       await this.git.pull("origin", branchName, options);
       spinner.stop();
       await sleep(0);
-      log.success("同步远程分支代码成功");
+      log.success(`同步远程分支 [${branchName}] 代码成功`);
       spinner.stop();
     } catch (e) {
       log.error("git pull origin " + branchName);
@@ -443,7 +443,7 @@ class Git {
     } else {
       await this.git.checkoutLocalBranch(branchName);
     }
-    log.verbose(`本地分支切换到 ${branchName} `);
+    log.verbose(`本地分支切换到 [${branchName}] 分支`);
   }
   async getRemoteBranchList(type) {
     const remotes = await this.git.listRemote(["--refs"]);
