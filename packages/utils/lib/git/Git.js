@@ -5,7 +5,13 @@ import fsExtra from "fs-extra";
 import ora from "ora";
 import { execa } from "execa";
 import SimpleGit from "simple-git";
-import { makeList, makePassword, makeConfirm, makeInput } from "../inquirer.js";
+import {
+  makeList,
+  makePassword,
+  makeConfirm,
+  makeInput,
+  makeCheckbox,
+} from "../inquirer.js";
 import { writeFile, readFile, createFile } from "../file.js";
 import log from "../log.js";
 import { getDefalutCliPath, getGitStroePath } from "../Package.js";
@@ -66,7 +72,8 @@ class Git {
     // 创建 dev 分支，同时创建一个默认 dev 分支
     //
     // commit 提交
-    await this.commit();
+    // await this.commit();
+    await this.publish();
   }
   async commit() {
     await this.checkCurrentBranch();
@@ -80,6 +87,12 @@ class Git {
     await this.pullRemoteDevAndBranch();
     // 5. 推到远程对应分支
     await this.pushRemoteRepo(this.branch);
+  }
+  async publish() {
+    await this.checkoutBranch("dev");
+    await this.mergeBranchToDev();
+    await this.pushRemoteRepo("dev");
+    // await this.generatorTag();
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
@@ -387,6 +400,62 @@ class Git {
       spinner.stop();
     }
   }
+
+  /**
+   * publish 部分
+   */
+  async checkTag() {}
+  async checkoutBranch(branchName) {
+    const localBranchList = await this.git.branchLocal();
+    console.log(localBranchList);
+    if (localBranchList?.all?.includes(branchName)) {
+      await this.git.checkout(branchName);
+    } else {
+      await this.git.checkoutLocalBranch(branchName);
+    }
+    log.success(`本地分支切换到 ${branchName} `);
+  }
+  async getRemoteBranchList(type) {
+    const remotes = await this.git.listRemote(["--heads"]);
+    let reg;
+    if (type === "tag") {
+      reg = /.+?refs\/tags\/(release\/[\w]+)/g;
+    } else {
+      reg = /.+?refs\/heads\/(feature\/[\w]+)/g;
+    }
+    return remotes
+      .split("\n")
+      .map((b) => {
+        const match = reg.exec(b);
+        reg.lastIndex = 0;
+        if (match) {
+          return match[1];
+        }
+      })
+      .filter((_) => _);
+  }
+  async mergeBranchToDev() {
+    // const remotes = await this.git.listRemote(["--heads"]);
+    // const featureReg = /.+?refs\/heads\/(feature\/[\w]+)/g;
+    const mergeBranchList = await this.getRemoteBranchList("head");
+    const needMerged = await makeCheckbox({
+      message: "请选择要合并的分支",
+      choices: mergeBranchList.map((_) => ({ name: _, value: _ })),
+    });
+    const spinner = ora("开始合并代码").start();
+    console.log(needMerged);
+    if (needMerged?.length > 0) {
+      for (let branch of needMerged) {
+        spinner.text = `开始合并代码 [${branch}] -> [dev]`;
+        await this.git.mergeFromTo(branch, "dev");
+      }
+    }
+    spinner.stop();
+    log.success("代码合并完成");
+  }
+  //   async generatorTag() {
+  //     log.info("获取远程 tag 列表");
+  //   }
 }
 
 export default Git;

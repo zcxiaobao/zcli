@@ -23,7 +23,7 @@ function make({
     loop,
   };
 
-  if (type === "list") {
+  if (type === "list" || type === "checkbox") {
     options.choices = choices;
   }
   // 注意: 由于此处封装了 .name，后续获取都是 name 属性值
@@ -42,4 +42,8 @@ export function makePassword(params) {
 }
 export function makeConfirm(params) {
   return make({ type: "confirm", default: false, ...params });
+}
+
+export function makeCheckbox(params) {
+  return make({ type: "checkbox", ...params });
 }
