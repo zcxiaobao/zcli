@@ -499,7 +499,7 @@ class Git {
       reg = /.+?refs\/tags\/([\w\.]+)/g;
     } else {
       reg = new RegExp(
-        `.+?refs\/heads\/(${this.branchRule.feature}\/[\\w\\.]+)`,
+        `.+?refs\/heads\/(${this.branchRule.feature}\/\\S+)`,
         "g"
       );
     }
