@@ -40,8 +40,9 @@ function createGitServer(gitServer) {
   //   return null;
 }
 class Git {
-  constructor(projectPath) {
+  constructor(projectPath, options) {
     this.projectPath = projectPath;
+    this.options = options;
     this.pkgPath = path.resolve(this.projectPath, "package.json");
     this.branchRule = {};
     this.git = SimpleGit(projectPath);
@@ -91,12 +92,13 @@ class Git {
   async publish() {
     await this.checkoutBranch(this.branchRule.dev);
     await this.mergeBranchToDev();
-    await this.generatorTag();
-    await this.mergeBranch(this.branchRule.dev, this.branchRule.master);
-    await this.iteratorVersion();
-    await this.mergeBranch(this.branchRule.master, this.branchRule.dev);
-    await this.pullRemoteRepo(this.branchRule.master);
-    await this.pushRemoteRepo(this.branchRule.master);
+    if (this.options.release) {
+      await this.generatorTag();
+      await this.iteratorVersion();
+      await this.mergeBranch(this.branchRule.dev, this.branchRule.master);
+      await this.pullRemoteRepo(this.branchRule.master);
+      await this.pushRemoteRepo(this.branchRule.master);
+    }
     await this.pullRemoteRepo(this.branchRule.dev);
     await this.pushRemoteRepo(this.branchRule.dev);
     await this.deleteLocalBranch();
@@ -346,7 +348,8 @@ class Git {
           "--allow-unrelated-histories": null,
         });
       } else {
-        await this.git.checkout(["-b", this.branchRule.master]);
+        if (this.branchRule.master !== "master")
+          await this.git.checkout(["-b", this.branchRule.master]);
         await this.pushRemoteRepo(this.branchRule.master);
       }
 
@@ -600,10 +603,10 @@ class Git {
     }
   }
   async iteratorRemotePackageVersion(incVersion) {
-    const nowBranch = await this.git.status().current;
-    if (nowBranch !== this.branchRule.master) {
-      await this.checkoutBranch(this.branchRule.master);
-    }
+    // const nowBranch = await this.git.status().current;
+    // if (nowBranch !== this.branchRule.master) {
+    //   await this.checkoutBranch(this.branchRule.master);
+    // }
     await this.checkNotCommited(incVersion, `版本迭代至${incVersion}`);
   }
   async mergeBranch(from, to) {

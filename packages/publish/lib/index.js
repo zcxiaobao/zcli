@@ -11,13 +11,14 @@ class PublishCommand extends Command {
   }
 
   get options() {
-    return [];
+    return [["-r, --release", "是否发布版本", false]];
   }
 
-  async action() {
+  async action([options]) {
+    console.log(options);
     log.info("publish指令启动");
     const projectPath = process.cwd();
-    this.git = new Git(projectPath);
+    this.git = new Git(projectPath, options);
     await this.git.init();
     await this.git.prepare();
     await this.git.publish();
