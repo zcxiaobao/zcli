@@ -83,6 +83,9 @@ class Github extends GitCommon {
   getRepoPulls(owner, repo, params) {
     return this.get(`/repos/${owner}/${repo}/pulls`, params);
   }
+  createRepoPulls(owner, repo, data) {
+    return this.post(`/repos/${owner}/${repo}/pulls`, data);
+  }
 }
 
 export default Github;

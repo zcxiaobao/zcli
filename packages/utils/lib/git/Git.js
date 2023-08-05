@@ -77,17 +77,24 @@ class Git {
     await this.linkRemoteRepo();
   }
   async commit() {
+    // 1.检查提交分支是否正确
     await this.checkCurrentBranch();
-    // 1. 检查是否有冲突
+    // 2. 检查是否有冲突
     await this.checkConficted();
-    // 2. 检查是否有 stash
+    // 3. 检查是否有 stash
     await this.checkStash();
-    // 3. 检查是否有未提交部分
-    await this.checkNotCommited();
-    // 4. 拉取远程 dev 和当前分支代码
-    await this.pullRemoteDevAndBranch();
-    // 5. 推到远程对应分支
-    await this.pushRemoteRepo(this.branch);
+    // 4. 检查是否有未提交部分
+    let completeCommit = await this.checkNotCommited();
+    if (completeCommit) {
+      // 5. 拉取远程 dev 和当前分支代码
+      await this.pullRemoteDevAndBranch();
+      // 6. 推到远程对应分支
+      await this.pushRemoteRepo(this.branch);
+    }
+    // 7. 检查是否发起合并请求
+    if (this.options.merge) {
+      await this.commitBranchMerge();
+    }
   }
   async publish() {
     if (this.options.release) {
@@ -427,9 +434,10 @@ class Git {
       }
       await this.git.commit(message);
       log.verbose(loginfo);
+      return true;
     } else {
       log.info("本地代码没有改变，无需 commit");
-      process.exit(0);
+      return false;
     }
   }
   async pullRemoteDevAndBranch() {
@@ -476,6 +484,56 @@ class Git {
         log.warn("获取远程[master]分支失败");
       }
       process.exit(0);
+    }
+  }
+
+  async commitBranchMerge() {
+    log.info("=== 请编辑 pull request 的详细内容 ===");
+    const title = await makeInput({
+      message: "请输入 pull request 的title",
+      validate(val) {
+        if (val <= 0) {
+          return false;
+        }
+        return true;
+      },
+    });
+    const body = await makeInput({
+      message: "请输入 pull request 的 body",
+      validate(val) {
+        if (val <= 0) {
+          return false;
+        }
+        return true;
+      },
+    });
+
+    const base = await makeList({
+      message: `将当前工作分支 [${this.branch}] 合并到？`,
+      choices: [
+        { name: this.branchRule.dev, value: this.branchRule.dev },
+        { name: this.branchRule.master, value: this.branchRule.master },
+      ],
+    });
+    const pullRequestData = {
+      title,
+      body,
+      base,
+      head: `${this.gitLogin}:${this.branch}`,
+    };
+    try {
+      const spinner = ora("pull request 提交中...").start();
+      await this.gitServer.createRepoPulls(
+        this.gitLogin,
+        this.projectInfo.name,
+        pullRequestData
+      );
+      spinner.stop();
+      await sleep(0);
+      log.success("=== 当前 pull request 提交成功 ===");
+    } catch (e) {
+      await sleep(0);
+      log.warn("pull request 失败，请确认两分支存在差异，再重新发起请求");
     }
   }
 

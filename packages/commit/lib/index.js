@@ -11,13 +11,13 @@ class CommitCommand extends Command {
   }
 
   get options() {
-    return [];
+    return [["-m, --merge", "是否发起合并请求", false]];
   }
 
-  async action() {
+  async action([options]) {
     log.info("commit指令启动");
     const projectPath = process.cwd();
-    this.git = new Git(projectPath);
+    this.git = new Git(projectPath, options);
     await this.git.init();
     await this.git.prepare();
     await this.git.commit();

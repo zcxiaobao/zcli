@@ -15,7 +15,6 @@ class PublishCommand extends Command {
   }
 
   async action([options]) {
-    console.log(options);
     log.info("publish指令启动");
     const projectPath = process.cwd();
     this.git = new Git(projectPath, options);
