@@ -80,6 +80,9 @@ class Github extends GitCommon {
   getOrgs(params) {
     return this.get(`/user/orgs`, params);
   }
+  getRepoPulls(owner, repo, params) {
+    return this.get(`/repos/${owner}/${repo}/pulls`, params);
+  }
 }
 
 export default Github;

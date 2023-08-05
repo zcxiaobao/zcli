@@ -90,7 +90,7 @@ class Git {
     await this.pushRemoteRepo(this.branch);
   }
   async publish() {
-    await this.checkoutBranch(this.branchRule.dev);
+    await this.checkNeedMergeBranchByPulls();
     await this.mergeBranchToDev();
     if (this.options.release) {
       await this.generatorTag();
@@ -99,8 +99,6 @@ class Git {
       await this.pullRemoteRepo(this.branchRule.master);
       await this.pushRemoteRepo(this.branchRule.master);
     }
-    await this.pullRemoteRepo(this.branchRule.dev);
-    await this.pushRemoteRepo(this.branchRule.dev);
     await this.deleteLocalBranch();
     await this.deleteRemoteBranch();
   }
@@ -210,7 +208,6 @@ class Git {
     let branchRule = readFile(gitBranchRulePath, { toJSON: true });
     if (branchRule) {
       branchRule = JSON.parse(branchRule);
-      console.log(typeof branchRule);
       this.branchRule.master = branchRule.master;
       this.branchRule.dev = branchRule.dev;
       this.branchRule.feature = branchRule.feature;
@@ -514,7 +511,7 @@ class Git {
       })
       .filter((_) => _);
   }
-  async mergeBranchToDev() {
+  async checkNeedMergeBranchByName() {
     let spinner = ora("获取所有分支...").start();
     const mergeBranchList = await this.getRemoteBranchList("head");
     spinner.stop();
@@ -527,17 +524,65 @@ class Git {
       choices: mergeBranchList.map((_) => ({ name: _, value: _ })),
     });
 
-    spinner = ora("开始合并代码").start();
-    if (needMerged?.length > 0) {
-      this.needMerged = needMerged;
-      for (let branch of needMerged) {
-        spinner.text = `开始合并代码 [${branch}] -> [${this.branchRule.dev}]`;
-        await this.git.mergeFromTo(branch, this.branchRule.dev);
+    this.needMerged = needMerged;
+  }
+
+  async checkNeedMergeBranchByPulls() {
+    let spinner = ora("获取待合并分支...").start();
+    const repoPullList = await this.gitServer.getRepoPulls(
+      this.gitLogin,
+      this.projectInfo.name
+    );
+    spinner.stop();
+    if (!repoPullList || repoPullList.length === 0) {
+      log.warn("没有开发分支等待合并!!!");
+      process.exit(0);
+    }
+    const mergeBranchList = repoPullList
+      .filter((_) => _.state === "open")
+      .map((_) => {
+        const branchInfo = {};
+        branchInfo.name = `${_.title} | [${_.head.ref}] -> [${_.base.ref}]`;
+        branchInfo.value = { from: _.head.ref, to: _.base.ref };
+        return branchInfo;
+      });
+    const needMerged = await makeCheckbox({
+      message: "请选择要合并的分支",
+      choices: mergeBranchList,
+    });
+    this.needMerged = needMerged;
+  }
+  async mergeBranchToDev() {
+    // let spinner = ora("获取所有分支...").start();
+    // const mergeBranchList = await this.getRemoteBranchList("head");
+    // spinner.stop();
+    // if (!mergeBranchList || mergeBranchList.length === 0) {
+    //   log.warn("没有开发分支等待合并!!!");
+    //   process.exit(0);
+    // }
+    // const needMerged = await makeCheckbox({
+    //   message: "请选择要合并的分支",
+    //   choices: mergeBranchList.map((_) => ({ name: _, value: _ })),
+    // });
+    console.log("");
+    log.info("=== 开始合并代码 ===");
+    console.log("");
+    if (this.needMerged?.length > 0) {
+      for (let branch of this.needMerged) {
+        log.info("当前合并分支", `[${branch.from}] -> [${branch.to}]`);
+        // await this.checkoutBranch(branch.to);
+        // await this.pullRemoteRepo(branch.to);
+        await this.mergeBranch(branch.from, branch.to);
+        // await this.git.mergeFromTo(branch.from, branch.to);
+        // await this.pushRemoteRepo(branch.to);
+        await sleep(0);
+        log.success(`[${branch.from}] -> [${branch.to}] 合并完成`);
       }
     }
-    spinner.stop();
     await sleep(0);
-    log.success("代码合并完成");
+    console.log("");
+    log.success("=== 代码全部合并完成 ===");
+    console.log("");
   }
   async generatorTag() {
     let spinner = ora("检查远程仓库 tag ...").start();
@@ -610,14 +655,16 @@ class Git {
     await this.checkNotCommited(incVersion, `版本迭代至${incVersion}`);
   }
   async mergeBranch(from, to) {
+    await this.pullRemoteRepo(to);
     await this.checkoutBranch(to);
     await this.git.mergeFromTo(from, to);
+    await this.pushRemoteRepo(to);
   }
   async deleteLocalBranch() {
     log.info("开始删除本地分支");
     if (this.needMerged?.length > 0) {
       for (let branch of this.needMerged) {
-        await this.git.deleteLocalBranch(branch);
+        await this.git.deleteLocalBranch(branch.from);
       }
     }
     log.success("删除本地分支开发成功: ", this.needMerged?.join(" || "));
@@ -627,7 +674,7 @@ class Git {
     log.info("开始删除远程分支");
     if (this.needMerged?.length > 0) {
       for (let branch of this.needMerged) {
-        await this.git.push(["origin", "--delete", branch]);
+        await this.git.push(["origin", "--delete", branch.from]);
       }
     }
     log.success("删除远程分支成功: ", this.needMerged?.join(" || "));
