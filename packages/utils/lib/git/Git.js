@@ -90,17 +90,19 @@ class Git {
     await this.pushRemoteRepo(this.branch);
   }
   async publish() {
-    await this.checkNeedMergeBranchByPulls();
-    await this.mergeBranchToDev();
     if (this.options.release) {
+      await this.checkoutBranch(this.branchRule.dev);
       await this.generatorTag();
       await this.iteratorVersion();
       await this.mergeBranch(this.branchRule.dev, this.branchRule.master);
-      await this.pullRemoteRepo(this.branchRule.master);
-      await this.pushRemoteRepo(this.branchRule.master);
+      // await this.pullRemoteRepo(this.branchRule.master);
+      // await this.pushRemoteRepo(this.branchRule.master);
+    } else {
+      await this.checkNeedMergeBranchByPulls();
+      await this.mergeBranchToDev();
+      await this.deleteLocalBranch();
+      await this.deleteRemoteBranch();
     }
-    await this.deleteLocalBranch();
-    await this.deleteRemoteBranch();
   }
   checkCliHomePath() {
     this.homeCliPath = getDefalutCliPath();
