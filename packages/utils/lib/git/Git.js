@@ -97,6 +97,11 @@ class Git {
     }
   }
   async publish() {
+    await this.checkNeedMergeBranchByPulls();
+    await this.mergeBranchToDev();
+    // await this.deleteLocalBranch();
+    // await this.deleteRemoteBranch();
+
     if (this.options.release) {
       await this.checkoutBranch(this.branchRule.dev);
       await this.generatorTag();
@@ -104,9 +109,6 @@ class Git {
       await this.mergeBranch(this.branchRule.dev, this.branchRule.master);
       // await this.pullRemoteRepo(this.branchRule.master);
       // await this.pushRemoteRepo(this.branchRule.master);
-    } else {
-      await this.checkNeedMergeBranchByPulls();
-      await this.mergeBranchToDev();
       await this.deleteLocalBranch();
       await this.deleteRemoteBranch();
     }
@@ -392,19 +394,17 @@ class Git {
     const spinner = ora("检查 stash 记录...").start();
     // log.info("检查 stash 记录");
     let stashList = await this.git.stashList();
-
+    spinner.stop();
+    await sleep(0);
     if (stashList.all.length > 0) {
       const stashPop = await makeConfirm({
         message: "stash 中存有部分代码，是否pop？",
       });
       if (stashPop) {
         await this.git.stash(["pop"]);
-        spinner.stop();
-        await sleep(0);
         log.success("stash pop 成功");
       }
     } else {
-      spinner.stop();
       await sleep(0);
     }
   }
@@ -464,8 +464,8 @@ class Git {
       await sleep(0);
       log.success(`推送代码到远程 [${branchName}] 分支成功`);
     } catch (e) {
-      printErrorLog(e);
       spinner.stop();
+      printErrorLog(e);
     }
   }
 
@@ -533,7 +533,9 @@ class Git {
       log.success("=== 当前 pull request 提交成功 ===");
     } catch (e) {
       await sleep(0);
+      log.error(e);
       log.warn("pull request 失败，请确认两分支存在差异，再重新发起请求");
+      spinner.stop();
     }
   }
 
@@ -596,21 +598,21 @@ class Git {
     spinner.stop();
     if (!repoPullList || repoPullList.length === 0) {
       log.warn("没有开发分支等待合并!!!");
-      process.exit(0);
-    }
-    const mergeBranchList = repoPullList
-      .filter((_) => _.state === "open")
-      .map((_) => {
-        const branchInfo = {};
-        branchInfo.name = `${_.title} | [${_.head.ref}] -> [${_.base.ref}]`;
-        branchInfo.value = { from: _.head.ref, to: _.base.ref };
-        return branchInfo;
+    } else {
+      const mergeBranchList = repoPullList
+        .filter((_) => _.state === "open")
+        .map((_) => {
+          const branchInfo = {};
+          branchInfo.name = `${_.title} | [${_.head.ref}] -> [${_.base.ref}]`;
+          branchInfo.value = { from: _.head.ref, to: _.base.ref };
+          return branchInfo;
+        });
+      const needMerged = await makeCheckbox({
+        message: "请选择要合并的分支",
+        choices: mergeBranchList,
       });
-    const needMerged = await makeCheckbox({
-      message: "请选择要合并的分支",
-      choices: mergeBranchList,
-    });
-    this.needMerged = needMerged;
+      this.needMerged = needMerged;
+    }
   }
   async mergeBranchToDev() {
     // let spinner = ora("获取所有分支...").start();
@@ -624,25 +626,27 @@ class Git {
     //   message: "请选择要合并的分支",
     //   choices: mergeBranchList.map((_) => ({ name: _, value: _ })),
     // });
-    console.log("");
-    log.info("=== 开始合并代码 ===");
-    console.log("");
-    if (this.needMerged?.length > 0) {
-      for (let branch of this.needMerged) {
-        log.info("当前合并分支", `[${branch.from}] -> [${branch.to}]`);
-        // await this.checkoutBranch(branch.to);
-        // await this.pullRemoteRepo(branch.to);
-        await this.mergeBranch(branch.from, branch.to);
-        // await this.git.mergeFromTo(branch.from, branch.to);
-        // await this.pushRemoteRepo(branch.to);
-        await sleep(0);
-        log.success(`[${branch.from}] -> [${branch.to}] 合并完成`);
+    if (this.needMerged && this.needMerged.length) {
+      console.log("");
+      log.info("=== 开始合并代码 ===");
+      console.log("");
+      if (this.needMerged?.length > 0) {
+        for (let branch of this.needMerged) {
+          log.info("当前合并分支", `[${branch.from}] -> [${branch.to}]`);
+          // await this.checkoutBranch(branch.to);
+          // await this.pullRemoteRepo(branch.to);
+          await this.mergeBranch(branch.from, branch.to);
+          // await this.git.mergeFromTo(branch.from, branch.to);
+          // await this.pushRemoteRepo(branch.to);
+          await sleep(0);
+          log.success(`[${branch.from}] -> [${branch.to}] 合并完成`);
+        }
       }
+      await sleep(0);
+      console.log("");
+      log.success("=== 代码全部合并完成 ===");
+      console.log("");
     }
-    await sleep(0);
-    console.log("");
-    log.success("=== 代码全部合并完成 ===");
-    console.log("");
   }
   async generatorTag() {
     let spinner = ora("检查远程仓库 tag ...").start();
