@@ -45,7 +45,9 @@ class Git {
     this.options = options;
     this.pkgPath = path.resolve(this.projectPath, "package.json");
     this.branchRule = {};
-    this.git = SimpleGit(projectPath);
+    this.git = SimpleGit(projectPath, {
+      timeout: 2000,
+    });
   }
   async init() {
     // 初始化缓存目录
