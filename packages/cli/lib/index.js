@@ -1,3 +1,4 @@
+import CreateDefaultCommand from "@zcxiaobao/default";
 import CreateInitCommand from "@zcxiaobao/init";
 import CreateInstallCommand from "@zcxiaobao/install";
 import CreateCommitCommand from "@zcxiaobao/commit";
@@ -6,6 +7,7 @@ import generatorCommand from "./generatorCommand.js";
 import "./errorHander.js";
 export default function () {
   const program = generatorCommand();
+  CreateDefaultCommand(program);
   CreateInitCommand(program);
   CreateInstallCommand(program);
   CreateCommitCommand(program);

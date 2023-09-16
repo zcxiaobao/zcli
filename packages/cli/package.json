@@ -27,6 +27,7 @@
   "type": "module",
   "dependencies": {
     "@zcxiaobao/commit": "^0.0.0",
+    "@zcxiaobao/default": "^0.0.0",
     "@zcxiaobao/init": "^0.0.0",
     "@zcxiaobao/install": "^0.0.0",
     "@zcxiaobao/publish": "^0.0.0",

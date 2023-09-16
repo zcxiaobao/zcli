@@ -73,6 +73,14 @@ const INIT_TEMPLATE = [
     examplePath: "examples",
     ignore: ["**/public/**", "**.png"],
   },
+  // {
+  //   name: "vue-admin-template项目模板",
+  //   value: "template-vue-element-admin",
+  //   npmName: "@zcxiaobao/template-vue-element-admin",
+  //   version: "1.0.0",
+  //   forceInstallNew: true,
+  //   ignore: ["**/public/**", "**/assets/**"],
+  // },
 ];
 
 // [
