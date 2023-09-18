@@ -20,7 +20,6 @@ async function downloadAddTemplate({ npmName, version }, targetPath) {
 }
 export default async function downloadTemplate({ template, targetPath }) {
   const { version, npmName } = template;
-  console.log(template);
   // 1.检查模板是否存在
   const targetTemPath = getTargetTemplatePath(npmName);
   const targetTemPathExits = pathExistsSync(targetTemPath);

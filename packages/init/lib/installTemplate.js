@@ -9,7 +9,7 @@ import { log } from "@zcxiaobao/utils";
 function getCacheFilePath(targetPath, template) {
   return path.resolve(targetPath, "node_modules", template.npmName, "template");
 }
-function copyFile(targetPath, installDir, template, name) {
+function copyFile(targetPath, installDir, template) {
   const originFile = getCacheFilePath(targetPath, template);
   const fileList = fsExtra.readdirSync(originFile);
   const spinner = ora("正在拷贝模板文件...").start();
@@ -17,21 +17,28 @@ function copyFile(targetPath, installDir, template, name) {
     fsExtra.copySync(`${originFile}/${file}`, `${installDir}/${file}`);
   });
   spinner.stop();
-  log.success("模板拷贝成功");
+  log.success("模板下载成功");
 }
 
-async function ejsRender(installDir, name, ignore) {
+async function ejsRender(installDir, template, project) {
   const ejsData = {
     data: {
-      name, // 项目名称
-      //   ...data,
+      ...project, // 项目名称
     },
   };
-  log.info(ejsData.name);
+  const ejsIgnoreFiles = [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/.vscode/**",
+    "**/.DS_Store",
+  ];
+  if (template.ignore) {
+    ejsIgnoreFiles.push(...template.ignore);
+  }
   const files = await glob("**", {
     cwd: installDir,
     nodir: true,
-    ignore: [...ignore, "**/node_modules/**"],
+    ignore: [...ejsIgnoreFiles],
   });
   files.forEach((file) => {
     const filePath = path.resolve(installDir, file);
@@ -40,29 +47,18 @@ async function ejsRender(installDir, name, ignore) {
         fsExtra.writeFileSync(filePath, res);
       } else {
         log.error(err, file);
+        process.exit(0);
       }
     });
   });
 }
 
 export default function installTemplate(selectedTemplate, opts) {
-  const { force = false } = opts;
-  const { targetPath, name, template, ignore } = selectedTemplate;
+  const { targetPath, project, template } = selectedTemplate;
   const rootDir = process.cwd();
-  const installDir = path.resolve(`${rootDir}/${name}`);
-  log.info(installDir);
+  const installDir = path.resolve(`${rootDir}/${project.name}`);
   fsExtra.ensureDir(targetPath);
-
-  if (pathExistsSync(installDir)) {
-    if (!force) {
-      log.error(`当前目录中已经存在${installDir}文件夹`);
-    } else {
-      fsExtra.removeSync(installDir);
-      fsExtra.ensureDir(installDir);
-    }
-  } else {
-    fsExtra.ensureDir(installDir);
-  }
-  copyFile(targetPath, installDir, template, name);
-  ejsRender(installDir, name, ignore);
+  fsExtra.ensureDir(installDir);
+  copyFile(targetPath, installDir, template, project.name);
+  ejsRender(installDir, template, project);
 }

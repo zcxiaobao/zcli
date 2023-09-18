@@ -1,20 +1,17 @@
-import { homedir } from "node:os";
-import path from "node:path";
-
-import { makeInput, log, makeList, getLatestVersion } from "@zcxiaobao/utils";
+import { makeInput, log, makeList } from "@zcxiaobao/utils";
 
 const INIT_TEMPLATE = [
-  {
-    name: "「慕课乐高」标准项目模板",
-    npmName: "@imooc-cli/imooc-lego-standard-template",
-    version: "1.0.0",
-    type: "normal",
-    installCommand: "npm install",
-    startCommand: "npm run serve",
-    ignore: ["**/public/**"],
-    tag: ["project"],
-    buildPath: "dist",
-  },
+  // {
+  //   name: "「慕课乐高」标准项目模板",
+  //   npmName: "@imooc-cli/imooc-lego-standard-template",
+  //   version: "1.0.0",
+  //   type: "normal",
+  //   installCommand: "npm install",
+  //   startCommand: "npm run serve",
+  //   ignore: ["**/public/**"],
+  //   tag: ["project"],
+  //   buildPath: "dist",
+  // },
   {
     name: "Vue2 标准项目模板",
     npmName: "@imooc-cli/vue2-standard-template",
@@ -53,33 +50,35 @@ const INIT_TEMPLATE = [
     buildPath: "dist",
   },
   {
-    name: "Vue3 标准组件模板",
-    npmName: "@imooc-cli/vue3-component",
+    name: "vue-admin-template项目模板",
+    value: "template-vue-element-admin",
+    npmName: "@zcxiaobao/template-vue-element-admin",
     version: "1.0.0",
-    type: "normal",
-    tag: ["component"],
+    forceInstallNew: true,
+    tag: ["project"],
     startCommand: "npm run dev",
-    buildPath: "dist",
-    examplePath: "examples",
-  },
-  {
-    name: "慕课乐高组件库模板",
-    npmName: "imooc-cli-dev-lego-components",
-    version: "1.0.0",
-    type: "normal",
-    tag: ["component"],
-    startCommand: "npm run serve",
-    buildPath: "dist",
-    examplePath: "examples",
-    ignore: ["**/public/**", "**.png"],
+    ignore: ["**/public/**", "**/assets/**"],
   },
   // {
-  //   name: "vue-admin-template项目模板",
-  //   value: "template-vue-element-admin",
-  //   npmName: "@zcxiaobao/template-vue-element-admin",
+  //   name: "Vue3 标准组件模板",
+  //   npmName: "@imooc-cli/vue3-component",
   //   version: "1.0.0",
-  //   forceInstallNew: true,
-  //   ignore: ["**/public/**", "**/assets/**"],
+  //   type: "normal",
+  //   tag: ["component"],
+  //   startCommand: "npm run dev",
+  //   buildPath: "dist",
+  //   examplePath: "examples",
+  // },
+  // {
+  //   name: "慕课乐高组件库模板",
+  //   npmName: "imooc-cli-dev-lego-components",
+  //   version: "1.0.0",
+  //   type: "normal",
+  //   tag: ["component"],
+  //   startCommand: "npm run serve",
+  //   buildPath: "dist",
+  //   examplePath: "examples",
+  //   ignore: ["**/public/**", "**.png"],
   // },
 ];
 
@@ -118,8 +117,6 @@ const INIT_TYPE_LIST = [
   { name: "组件", value: INIT_TYPE.COMPONENT },
 ];
 
-const DEFAULT_CLI_HOME = ".zcli";
-
 function getInitType() {
   return makeList({
     choices: INIT_TYPE_LIST,
@@ -148,13 +145,8 @@ function getProjectVersion(initType) {
   return makeInput({
     message:
       initType === INIT_TYPE.PROJECT ? "请选择项目版本号" : "请选择组件版本号",
-    defalut: "1.0.0",
+    defaultValue: "1.0.0",
   });
-}
-
-// 安装缓存目录
-function getDefalutCliTemPath() {
-  return path.resolve(`${homedir()}/${DEFAULT_CLI_HOME}`, "template");
 }
 
 export default async function createTeplate() {
@@ -183,20 +175,6 @@ export default async function createTeplate() {
   log.verbose("template", template);
   return {
     template,
-    name: projectName,
-    version,
+    project: { name: projectName, version },
   };
-  // const templateLatest = await getLatestVersion(
-  //   needLoadTemplateDetails.npmName
-  // );
-  // log.verbose("templateLatest", templateLatest);
-
-  // const targetPath = getDefalutCliTemPath();
-  // return {
-  //   name: projectName,
-  //   initType,
-  //   template: needLoadTemplateDetails,
-  //   targetPath, // 安装目录
-  //   ignore: needLoadTemplateDetails.ignore,
-  // };
 }

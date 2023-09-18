@@ -1,7 +1,7 @@
 import log from "./log.js";
 import printErrorLog from "./printErrorLog.js";
 import { makeInput, makeList, makeConfirm } from "./inquirer.js";
-import { getLatestVersion } from "./npm.js";
+import { getLatestVersion, installDependencies, runProject } from "./npm.js";
 import Github from "./git/Github.js";
 import Git from "./git/Git.js";
 import { DEFAULT_CLI_HOME, GIT_OWNER_TYPE, REPO_OWNER } from "./constType.js";
@@ -22,6 +22,8 @@ export {
   makeList,
   makeConfirm,
   getLatestVersion,
+  installDependencies,
+  runProject,
   Github,
 };
 
