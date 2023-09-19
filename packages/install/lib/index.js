@@ -85,6 +85,7 @@ class InstallCommand extends Command {
       list = [],
       count = 0;
     const params = {
+      // q: "jqery+in:file+language:js",
       q: this.q + (this.language ? `+language:${this.language}` : ""),
       per_page: this.per_page,
       page: this.page,
@@ -117,7 +118,6 @@ class InstallCommand extends Command {
         });
       });
     }
-
     count = searchRes.total_count;
     if (this.per_page * this.page < count) {
       list.push({
@@ -143,6 +143,9 @@ class InstallCommand extends Command {
       } else {
         this.keyword = keyword;
       }
+    } else {
+      log.info("未能查询到满足要求的仓库！！！");
+      process.exit(0);
     }
   }
   async doSelectTag() {
@@ -221,7 +224,6 @@ class InstallCommand extends Command {
   }
 
   async installDependencies() {
-    // const spinner = ora("正在安装依赖...").start();
     const cwd = process.cwd();
     try {
       const ret = await this.gitAPI.installDependencies(cwd, this.keyword);
@@ -230,10 +232,8 @@ class InstallCommand extends Command {
       } else {
         log.success(`依赖安装成功: ${this.keyword}(${this.selectedTag})`);
       }
-      // spinner.stop();
     } catch (e) {
       printErrorLog(e);
-      // spinner.stop();
     }
   }
 

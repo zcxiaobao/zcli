@@ -37,7 +37,6 @@ class GitCommon {
     this.token = token;
   }
   cloneRepo(fullName, tag) {
-    console.log(tag);
     if (tag) {
       return execa("git", ["clone", this.getRepoUrl(fullName), "-b", tag], {
         stdout: "inherit",
