@@ -93,7 +93,7 @@ class Git {
       // 6. 推到远程对应分支
       await this.pushRemoteRepo(this.branch);
     }
-    // 7. 检查是否发起合并请求
+    // 7. 检查是否发起 pull 合并请求
     if (this.options.merge) {
       await this.commitBranchMerge();
     }
@@ -223,7 +223,7 @@ class Git {
       branchRule = JSON.parse(branchRule);
       this.branchRule.master = branchRule.master;
       this.branchRule.dev = branchRule.dev;
-      this.branchRule.feature = branchRule.feature;
+      // this.branchRule.feature = branchRule.feature;
     } else {
       this.branchRule.master = await makeInput({
         message: "请输入主分支名称",
@@ -239,17 +239,17 @@ class Git {
         },
         defaultValue: "dev",
       });
-      this.branchRule.feature = await makeInput({
-        message: "请输入开发分支前缀名",
-        validata(val) {
-          return val > 0;
-        },
-        defaultValue: "feature",
-      });
+      // this.branchRule.feature = await makeInput({
+      //   message: "请输入开发分支前缀名",
+      //   validata(val) {
+      //     return val > 0;
+      //   },
+      //   defaultValue: "feature",
+      // });
       fsExtra.writeJSONSync(gitBranchRulePath, JSON.stringify(this.branchRule));
     }
     log.success(
-      `\n当前 git 中，\n主分支: ${this.branchRule.master}\n开发分支: ${this.branchRule.dev} \n子开发分支: ${this.branchRule.feature}`
+      `\n当前 git 中，\n主分支: ${this.branchRule.master}\n开发分支: ${this.branchRule.dev}`
     );
   }
   async checkProjectInfo() {
@@ -502,16 +502,10 @@ class Git {
     });
     const body = await makeInput({
       message: "请输入 pull request 的 body",
-      validate(val) {
-        if (val <= 0) {
-          return false;
-        }
-        return true;
-      },
     });
 
     const base = await makeList({
-      message: `将当前工作分支 [${this.branch}] 合并到？`,
+      message: `将当前工作分支代码申请合并到 [${this.branch}]？`,
       choices: [
         { name: this.branchRule.dev, value: this.branchRule.dev },
         { name: this.branchRule.master, value: this.branchRule.master },
@@ -536,7 +530,7 @@ class Git {
     } catch (e) {
       await sleep(0);
       log.error(e);
-      log.warn("pull request 失败，请确认两分支存在差异，再重新发起请求");
+      log.warn("pull request 失败，两分支存在差异，确认后再重新发起请求");
       spinner.stop();
     }
   }
