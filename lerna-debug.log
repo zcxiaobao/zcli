@@ -1,0 +1,8 @@
+17 error Error: Command failed with exit code 1: git remote update
+17 error fatal: unable to access 'https://github.com/zcxiaobao/zcli.git/': Failed to connect to github.com port 443 after 21110 ms: Timed out
+17 error     at makeError (F:\zcxiaobao\webProject\zcli\node_modules\execa\lib\error.js:59:11)
+17 error     at module.exports.sync (F:\zcxiaobao\webProject\zcli\node_modules\execa\index.js:186:17)
+17 error     at Object.execSync (F:\zcxiaobao\webProject\zcli\node_modules\@lerna\child-process\index.js:39:16)
+17 error     at updateRemote (F:\zcxiaobao\webProject\zcli\node_modules\lerna\dist\index.js:7613:18)
+17 error     at isBehindUpstream (F:\zcxiaobao\webProject\zcli\node_modules\lerna\dist\index.js:7603:3)
+17 error     at VersionCommand.initialize (F:\zcxiaobao\webProject\zcli\node_modules\lerna\dist\index.js:7913:57)

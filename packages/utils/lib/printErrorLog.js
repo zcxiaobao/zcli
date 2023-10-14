@@ -7,4 +7,5 @@ export default function printErrorLog(e, type) {
   } else {
     log.error(type, e.message);
   }
+  process.exit(0);
 }

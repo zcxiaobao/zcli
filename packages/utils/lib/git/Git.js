@@ -62,8 +62,6 @@ class Git {
     await this.checkGitToken();
     // 确定当前操作对象
     await this.checkGitOwn();
-    // 确定各分支命名规则
-    await this.checkGitBranchRule();
     // 获取本地项目信息
     this.projectInfo = await this.checkProjectInfo(this.projectPath);
     log.verbose("成功获取本地项目信息", this.projectInfo);
@@ -71,6 +69,8 @@ class Git {
       log.warn("请手动创建项目");
       return;
     }
+    // 确定各分支命名规则
+    await this.checkGitBranchRule();
     // 检查远程仓库
     await this.checkRemoteRepo();
     // 检查是否存在 gitignore
@@ -79,15 +79,15 @@ class Git {
     await this.linkRemoteRepo();
   }
   async commit() {
-    // 1.检查提交分支是否正确
-    await this.checkCurrentBranch();
-    // 2. 检查是否有冲突
+    // 1. 检查是否有冲突
     await this.checkConficted();
-    // 3. 检查是否有 stash
+    // 2. 检查是否有 stash
     await this.checkStash();
-    // 4. 检查是否有未提交部分
+    // 3. 检查是否有未提交部分
     let completeCommit = await this.checkNotCommited();
     if (completeCommit) {
+      // 4.检查提交分支是否正确
+      await this.checkCurrentBranch();
       // 5. 拉取远程 dev 和当前分支代码
       await this.pullRemoteDevAndBranch();
       // 6. 推到远程对应分支
@@ -217,23 +217,23 @@ class Git {
     log.success("成功获取 owner 和 login 信息", gitOwn, gitLogin);
   }
   async checkGitBranchRule() {
-    const gitBranchRulePath = this.store.branch;
+    // 不同项目可能存有不同的分支命名规则
+    const gitBranchRulePath = this.store.branch + "_" + this.projectInfo.name;
     let branchRule = readFile(gitBranchRulePath, { toJSON: true });
     if (branchRule) {
       branchRule = JSON.parse(branchRule);
       this.branchRule.master = branchRule.master;
       this.branchRule.dev = branchRule.dev;
-      // this.branchRule.feature = branchRule.feature;
     } else {
       this.branchRule.master = await makeInput({
-        message: "请输入主分支名称",
+        message: "请输入当前项目的主分支名称",
         validata(val) {
           return val > 0;
         },
         defaultValue: "master",
       });
       this.branchRule.dev = await makeInput({
-        message: "请输入开发主分支名称",
+        message: "请输入当前项目的开发主分支名称",
         validata(val) {
           return val > 0;
         },
@@ -248,8 +248,8 @@ class Git {
       // });
       fsExtra.writeJSONSync(gitBranchRulePath, JSON.stringify(this.branchRule));
     }
-    log.success(
-      `\n当前 git 中，\n主分支: ${this.branchRule.master}\n开发分支: ${this.branchRule.dev}`
+    log.verbose(
+      `\n当前项目，\n主分支: ${this.branchRule.master}\n开发分支: ${this.branchRule.dev}`
     );
   }
   async checkProjectInfo() {
@@ -273,12 +273,14 @@ class Git {
     }
   }
   async checkRemoteRepo() {
+    const spinner = ora(`检查远程仓库${this.projectInfo.name}ing`);
     let remoteRepo = await this.gitServer.getRepo(
       this.gitLogin,
       this.projectInfo.name
     );
+
     if (!remoteRepo) {
-      const spinner = ora("开始创建远程仓库...").start();
+      const spinner2 = ora("开始创建远程仓库...").start();
       try {
         if (this.gitOwn === REPO_OWNER.USER) {
           remoteRepo = await this.gitServer.createRepo({
@@ -292,7 +294,7 @@ class Git {
       } catch (e) {
         printErrorLog(e);
       } finally {
-        spinner.stop();
+        spinner2.stop();
       }
       await sleep(0);
       if (remoteRepo) {
@@ -300,6 +302,10 @@ class Git {
       } else {
         throw new Error("远程仓库创建失败");
       }
+    } else {
+      spinner.stop();
+      await sleep(0);
+      log.success(`成功获取${this.projectInfo.name}仓库信息`);
     }
     this.remoteRepo = remoteRepo;
     this.remoteRepoUrl = remoteRepo.ssh_url || remoteRepo.http_url;
@@ -311,27 +317,27 @@ class Git {
       writeFile(
         ignorePath,
         `.DS_Store
-        node_modules
+node_modules/
         
         
-        # local env files
-        .env.local
-        .env.*.local
+# local env files
+.env.local
+.env.*.local
         
-        # Log files
-        npm-debug.log*
-        yarn-debug.log*
-        yarn-error.log*
-        pnpm-debug.log*
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
         
-        # Editor directories and files
-        .idea
-        .vscode
-        *.suo
-        *.ntvs*
-        *.njsproj
-        *.sln
-        *.sw?`
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?`
       );
       log.success("自动写入 .gitignore 文件");
     }
@@ -347,7 +353,7 @@ class Git {
       if (!remotes.find((r) => r.name === "origin")) {
         await this.git.addRemote("origin", this.remoteRepoUrl);
       }
-      // 检查本地未提交代码
+      // 检查本地未提交代码;
       await this.checkNotCommited();
 
       const branches = await this.git.listRemote(["--heads"]);
@@ -358,8 +364,9 @@ class Git {
           "--allow-unrelated-histories": null,
         });
       } else {
-        if (this.branchRule.master !== "master")
+        if (this.branchRule.master !== "master") {
           await this.git.checkout(["-b", this.branchRule.master]);
+        }
         await this.pushRemoteRepo(this.branchRule.master);
       }
 
@@ -394,7 +401,6 @@ class Git {
   }
   async checkStash() {
     const spinner = ora("检查 stash 记录...").start();
-    // log.info("检查 stash 记录");
     let stashList = await this.git.stashList();
     spinner.stop();
     await sleep(0);
@@ -442,21 +448,23 @@ class Git {
       return false;
     }
   }
-  async pullRemoteDevAndBranch() {
-    await this.pullRemoteRepo(this.branchRule.dev);
-    const spinner = ora(`检查远程 [${this.branch}] 分支是否存在`).start();
-    // log.info(`检查远程 [${this.branch}] 分支`);
+  async pullRemoteRepoBranch(branch) {
+    const spinner = ora(`检查远程 [${branch}] 分支是否存在`).start();
     const remoteList = await this.git.listRemote(["--heads"]);
-    if (remoteList.includes(this.branch)) {
-      await this.pullRemoteRepo(this.branch);
+    if (remoteList.includes(branch)) {
+      await this.pullRemoteRepo(branch);
       spinner.stop();
       await sleep(0);
-      log.success(`远程 [${this.branch}] 分支存在，pull 其代码`);
+      log.success(`远程 [${branch}] 分支存在，pull 其代码`);
     } else {
       spinner.stop();
       await sleep(0);
-      log.warn(`远程不存在 [${this.branch}] 分支，已创建`);
+      log.warn(`远程不存在 [${branch}] 分支，已创建`);
     }
+  }
+  async pullRemoteDevAndBranch() {
+    await this.pullRemoteRepoBranch(this.branchRule.dev);
+    await this.pullRemoteRepoBranch(this.branch);
   }
   async pushRemoteRepo(branchName) {
     const spinner = ora(`推送代码到远程 [${branchName}] 分支`).start();
@@ -517,8 +525,8 @@ class Git {
       base,
       head: `${this.gitLogin}:${this.branch}`,
     };
+    const spinner = ora("pull request 提交中...").start();
     try {
-      const spinner = ora("pull request 提交中...").start();
       await this.gitServer.createRepoPulls(
         this.gitLogin,
         this.projectInfo.name,
@@ -528,10 +536,9 @@ class Git {
       await sleep(0);
       log.success("=== 当前 pull request 提交成功 ===");
     } catch (e) {
-      await sleep(0);
-      log.error(e);
-      log.warn("pull request 失败，两分支存在差异，确认后再重新发起请求");
       spinner.stop();
+      await sleep(0);
+      log.warn("pull request 失败，带合并分支不存在差异");
     }
   }
 
