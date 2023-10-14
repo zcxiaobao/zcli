@@ -1,8 +1,8 @@
-import CreateDefaultCommand from "@zcxiaobao/default";
-import CreateInitCommand from "@zcxiaobao/init";
-import CreateInstallCommand from "@zcxiaobao/install";
-import CreateCommitCommand from "@zcxiaobao/commit";
-import CreatePublishCommand from "@zcxiaobao/publish";
+import CreateDefaultCommand from "@zcxiaobao-cli/default";
+import CreateInitCommand from "@zcxiaobao-cli/init";
+import CreateInstallCommand from "@zcxiaobao-cli/install";
+import CreateCommitCommand from "@zcxiaobao-cli/commit";
+import CreatePublishCommand from "@zcxiaobao-cli/publish";
 import generatorCommand from "./generatorCommand.js";
 import "./errorHander.js";
 export default function () {

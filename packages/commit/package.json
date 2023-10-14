@@ -1,5 +1,5 @@
 {
-  "name": "@zcxiaobao/commit",
+  "name": "@zcxiaobao-cli/commit",
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "zcxiaobao <444186976@qq.com>",
@@ -28,6 +28,6 @@
   },
   "type": "module",
   "dependencies": {
-    "@zcxiaobao/utils": "^0.0.0"
+    "@zcxiaobao-cli/utils": "^0.0.0"
   }
 }

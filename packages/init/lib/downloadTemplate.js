@@ -8,7 +8,7 @@ import {
   log,
   getTargetTemplatePath,
   makeConfirm,
-} from "@zcxiaobao/utils";
+} from "@zcxiaobao-cli/utils";
 
 async function downloadAddTemplate({ npmName, version }, targetPath) {
   const installCommand = "npm";

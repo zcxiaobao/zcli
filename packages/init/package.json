@@ -1,5 +1,5 @@
 {
-  "name": "@zcxiaobao/init",
+  "name": "@zcxiaobao-cli/init",
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "zcxiaobao <444186976@qq.com>",
@@ -21,8 +21,8 @@
   },
   "type": "module",
   "dependencies": {
-    "@zcxiaobao/command": "^0.0.0",
-    "@zcxiaobao/utils": "^0.0.0",
+    "@zcxiaobao-cli/command": "^0.0.0",
+    "@zcxiaobao-cli/utils": "^0.0.0",
     "boxen": "^7.1.1",
     "chalk": "^5.3.0",
     "ejs": "^3.1.9",

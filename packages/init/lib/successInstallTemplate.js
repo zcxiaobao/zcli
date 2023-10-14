@@ -1,4 +1,8 @@
-import { installDependencies, makeConfirm, runProject } from "@zcxiaobao/utils";
+import {
+  installDependencies,
+  makeConfirm,
+  runProject,
+} from "@zcxiaobao-cli/utils";
 import path from "node:path";
 import boxen from "boxen";
 import chalk from "chalk";
@@ -30,7 +34,7 @@ async function runNewProject(template, temInstallPath) {
 function createSuccessInfo(name, tool) {
   const END_MSG = `${chalk.blue(
     "🎉 created project " + chalk.greenBright(name) + " Successfully"
-  )}\n\n 🙏 Thanks for using @zcxiaobao/zcli !`;
+  )}\n\n 🙏 Thanks for using @zcxiaobao-cli/zcli !`;
 
   const BOXEN_CONFIG = {
     padding: 1,

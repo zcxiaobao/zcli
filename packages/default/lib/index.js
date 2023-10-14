@@ -1,5 +1,5 @@
-import Command from "@zcxiaobao/command";
-import { makeList, log } from "@zcxiaobao/utils";
+import Command from "@zcxiaobao-cli/command";
+import { makeList, log } from "@zcxiaobao-cli/utils";
 const INIT_TEMPLATE = [
   {
     name: "「慕课乐高」标准项目模板",

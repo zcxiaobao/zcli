@@ -1,5 +1,5 @@
 import ora from "ora";
-import Command from "@zcxiaobao/command";
+import Command from "@zcxiaobao-cli/command";
 
 import {
   log,
@@ -7,7 +7,7 @@ import {
   makeInput,
   makeList,
   printErrorLog,
-} from "@zcxiaobao/utils";
+} from "@zcxiaobao-cli/utils";
 
 const NEXT_PAGE = "${zcli_next_page}";
 const PREV_PAGE = "${zcli_prev_page}";

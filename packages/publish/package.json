@@ -1,5 +1,5 @@
 {
-  "name": "@zcxiaobao/publish",
+  "name": "@zcxiaobao-cli/publish",
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "zcxiaobao <444186976@qq.com>",
@@ -24,7 +24,7 @@
     "url": "https://github.com/zcxiaobao/zcli/issues"
   },
   "publishConfig": {
-    "access": "public" 
+    "access": "public"
   },
   "type": "module"
 }

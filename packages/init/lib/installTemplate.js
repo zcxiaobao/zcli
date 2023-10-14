@@ -4,7 +4,7 @@ import { pathExistsSync } from "path-exists";
 import ora from "ora";
 import { glob } from "glob";
 import ejs from "ejs";
-import { log } from "@zcxiaobao/utils";
+import { log } from "@zcxiaobao-cli/utils";
 
 function getCacheFilePath(targetPath, template) {
   return path.resolve(targetPath, "node_modules", template.npmName, "template");

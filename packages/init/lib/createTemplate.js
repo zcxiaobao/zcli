@@ -1,4 +1,4 @@
-import { makeInput, log, makeList } from "@zcxiaobao/utils";
+import { makeInput, log, makeList } from "@zcxiaobao-cli/utils";
 
 const INIT_TEMPLATE = [
   // {
@@ -52,7 +52,7 @@ const INIT_TEMPLATE = [
   {
     name: "vue-admin-template项目模板",
     value: "template-vue-element-admin",
-    npmName: "@zcxiaobao/template-vue-element-admin",
+    npmName: "@zcxiaobao-cli/template-vue-element-admin",
     version: "1.0.0",
     forceInstallNew: true,
     tag: ["project"],
@@ -86,21 +86,21 @@ const INIT_TEMPLATE = [
 //   {
 //     name: "vue3项目模板",
 //     value: "template-vue3",
-//     npmName: "@zcxiaobao/template-vue3",
+//     npmName: "@zcxiaobao-cli/template-vue3",
 //     version: "1.0.0",
 //     forceInstallNew: true, // 是否默认下载最新版本
 //   },
 //   {
 //     name: "react18项目模板",
 //     value: "template-react18",
-//     npmName: "@zcxiaobao/template-react18",
+//     npmName: "@zcxiaobao-cli/template-react18",
 //     version: "1.0.0",
 //     forceInstallNew: true,
 //   },
 //   {
 //     name: "vue-admin-template项目模板",
 //     value: "template-vue-element-admin",
-//     npmName: "@zcxiaobao/template-vue-element-admin",
+//     npmName: "@zcxiaobao-cli/template-vue-element-admin",
 //     version: "1.0.0",
 //     forceInstallNew: true,
 //     ignore: ["**/public/**", "**/assets/**"],

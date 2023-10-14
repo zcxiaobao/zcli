@@ -1,4 +1,4 @@
-import { printErrorLog } from "@zcxiaobao/utils";
+import { printErrorLog } from "@zcxiaobao-cli/utils";
 
 process.on("uncaughtException", (e) => {
   printErrorLog(e, "error");

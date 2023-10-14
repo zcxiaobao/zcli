@@ -4,7 +4,7 @@ import {
   makeConfirm,
   getDefalutCliTemPath,
   ensureNeedDir,
-} from "@zcxiaobao/utils";
+} from "@zcxiaobao-cli/utils";
 import createTeplate from "./createTemplate.js";
 
 export default async function perpare(options) {

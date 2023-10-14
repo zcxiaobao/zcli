@@ -1,4 +1,4 @@
-import Command from "@zcxiaobao/command";
+import Command from "@zcxiaobao-cli/command";
 import downloadTemplate from "./downloadTemplate.js";
 import installTemplate from "./installTemplate.js";
 import successInstallTemplate from "./successInstallTemplate.js";

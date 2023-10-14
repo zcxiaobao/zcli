@@ -1,5 +1,5 @@
 {
-  "name": "@zcxiaobao/install",
+  "name": "@zcxiaobao-cli/install",
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "zcxiaobao <444186976@qq.com>",
@@ -28,8 +28,8 @@
   },
   "type": "module",
   "dependencies": {
-    "@zcxiaobao/command": "^0.0.0",
-    "@zcxiaobao/utils": "^0.0.0",
+    "@zcxiaobao-cli/command": "^0.0.0",
+    "@zcxiaobao-cli/utils": "^0.0.0",
     "execa": "^7.1.1",
     "fs-extra": "^11.1.1",
     "ora": "^6.3.1",

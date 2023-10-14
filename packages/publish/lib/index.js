@@ -1,5 +1,5 @@
-import Command from "@zcxiaobao/command";
-import { log, Git } from "@zcxiaobao/utils";
+import Command from "@zcxiaobao-cli/command";
+import { log, Git } from "@zcxiaobao-cli/utils";
 
 class PublishCommand extends Command {
   get command() {
