@@ -1,11 +1,3 @@
-# `command`
+## Command
 
-> TODO: description
-
-## Usage
-
-```
-const command = require('command');
-
-// TODO: DEMONSTRATE API
-```
+zcli command 命令的封装，更详细的请参考 [zcli](https://www.npmjs.com/package/@zcxiaobao-cli/cli)

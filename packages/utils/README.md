@@ -1,11 +1,5 @@
-# `utils`
+## Utils
 
-> TODO: description
+zcli 的工具类模块。
 
-## Usage
-
-```
-const utils = require('utils');
-
-// TODO: DEMONSTRATE API
-```
+更详细的请参考 [zcli](https://www.npmjs.com/package/@zcxiaobao-cli/cli)
