@@ -1,6 +1,6 @@
 {
   "name": "@zcxiaobao-cli/default",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "> TODO: description",
   "author": "zcxiaobao <444186976@qq.com>",
   "homepage": "https://github.com/zcxiaobao/zcli#readme",
@@ -28,7 +28,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@zcxiaobao-cli/command": "^0.0.2",
-    "@zcxiaobao-cli/utils": "^0.0.2"
+    "@zcxiaobao-cli/command": "^0.0.3",
+    "@zcxiaobao-cli/utils": "^0.0.3"
   }
 }
